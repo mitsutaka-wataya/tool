@@ -43,23 +43,27 @@ class Label_Image(object):
         SBtype 2:every photos subtract by 1 Stream's background
         """
         print("program has started")
+        
         self.back_ground_subtract = back_ground_subtract
         self.exp_type = exp_type
         self.dir = dir.replace("\\","/")
         self.expname = self.dir.split("/")[-1]
         
+        self.frame_time = 70
+        self.area_thresh = 500
         if back_ground_subtract:
             if SBtype == 1:self.out_dir=self.dir + "/output_ind_subback_by_mode"
             elif SBtype == 2:self.out_dir=self.dir + "/output_stream_subback_by_mode"
         else:self.out_dir=self.dir + "/output"
+        
         try:os.mkdir(self.out_dir)
         except:print("output has existed already")    
         print(self.out_dir)
 
-        self.frame_time = 70
+        
         self.interval = self.get_interval()
         self.feature = ("f_basal","b_basal","peak","auc","modified_auc","auc_divided_by_peak")
-        self.area_thresh = 500        
+                
         if split:
             stream_dir = glob.glob(dir+"/split/*V*")
             stream_dir = [i.replace("\\","/") for i in stream_dir]
@@ -68,22 +72,29 @@ class Label_Image(object):
             stream_fname = [i.replace("\\","/") for i in stream_fname]
             
         streamname = [i.split("/")[-1] for i in stream_fname]
-        self.Vol_list = [self.get_voltage(i) for i in streamname]        
-        self.Vol_str_list = [str(self.get_voltage(i))+"V" for i in streamname] 
+        self.Vol_list = [self.get_voltage(i) for i in streamname]                         
+        self.Vol_str_list = [str(self.get_voltage(i))+"V" for i in streamname]
+        all_vol = list(set(self.Vol_list))
+        repeat_num_each_vol = [self.Vol_list.index(i) for i in all_vol]
+        self.repeat_num = min(repeat_num_each_vol)
         
         if mask:
-            start=self.get_time()
-            mask_dir=glob.glob(dir+"/"+str(mask_type)+"*mask*.tif")
+            start_time = self.get_time()
+            
+            #read mask image
+            mask_dir = glob.glob(dir+"/"+str(mask_type)+"*mask*.tif")
             mask_dir = mask_dir[0].replace("\\","/")
             mask_fig = io.imread(mask_dir)
             self.labelimage = measure.label(mask_fig)           
             back_ground_label=(mask_fig+1)*(mask_fig==0)
-            #back_ground_label = measure.label(mask_fig,background=1)
             
+            # remove small object
             sizes = mal.labeled_size(self.labelimage)            
             self.labelimage = mal.remove_regions_where(self.labelimage,sizes<self.area_thresh)
             self.labelimage,counts = mal.relabel(self.labelimage)
             self.label_num = self.labelimage.max()
+            
+            # get each average of intensity and remove back ground  
             label_props = regionprops(self.labelimage)
             self.label_area = [i.area for i in label_props]
             self.back_mod = []
@@ -91,9 +102,9 @@ class Label_Image(object):
             self.back_mod= pd.DataFrame(self.back_mod)
             self.back_mod.to_csv(self.out_dir+"/background_mode.csv")
             
-            end=self.get_time()            
+            end_time=self.get_time()            
             print("intensity was mesured successfuly!!")
-            print("times:"+str(int(end-start))+"s")
+            print("times:"+str(int(end_time - start_time))+"s")
             
         elif label_image:
             self.labelimage = self.label_ndarray(dir)
@@ -116,11 +127,10 @@ class Label_Image(object):
         self.label_num = len(self.intensity_df_list[0].columns)        
         #self.x_label,self.legend_label = dd.get_x_label(self.exp_type)
         #self.get_propaty()
-        #self.save_csv()
+        self.save_csv()
         #self.save_figure()
         
     def get_time(self):
-            print("a")
             return(time.time())
 
     def get_voltage(self,fname):
@@ -162,6 +172,7 @@ class Label_Image(object):
                 self.back_mod += [back_intensity]
                 df = pd.DataFrame(int_mean).T - back_intensity
                 return(pd.concat([int_df,df]))
+                
             elif SBtype==2:
                 #every photos subtract by 1 Stream's background
                 back_region = measure.regionprops(labeled_back,intensity_image)[0]
@@ -174,17 +185,22 @@ class Label_Image(object):
             return(pd.concat([int_df,df]))
         
     def get_stream_label_intensity(self,stream_fname,labeled_back,SBtype=0,plot_hist=True):
-        #files=glob.glob(stream_dir+"/*.tif")
+        # read stream tiff
         stream_img = ImageCollection(stream_fname)
+        
+        # make hist dir
         if SBtype==2:
             try:os.mkdir(self.out_dir+"/hist")
             except:print("")
         
         time = [i*self.frame_time for i in range(len(stream_img))]
-        int_df =pd.DataFrame([])
+        int_df = pd.DataFrame([])
         self.back_val = np.array([])        
+        
         for i in stream_img:
             int_df = self.get_label_intensity(i,int_df,labeled_back,SBtype=SBtype)
+            
+        # remove back ground
         if SBtype==2:
             back_intensity,counts = stats.mstats.mode(self.back_val)
             int_df = int_df - back_intensity
@@ -198,7 +214,7 @@ class Label_Image(object):
                 plt.savefig(self.out_dir+"/hist/back_hist_"+figname+".png")
                 plt.clf()                
                 plt.close()
-                    
+                
             
         label_name = ["label"+str(i+1) for i in range(self.label_num)]
         int_df.columns = label_name
@@ -615,12 +631,38 @@ class Label_Image(object):
         df.to_excel(csv_dir + "/" + self.expname +"_" + dirname +".xlsx")
         
     def save_csv(self):
+        label_list = list(self.intensity_df_list[0].columns)
+        label = list(range(len(label_list)))
+        time_list = list(self.intensity_df_list[0].index)
+        repeat_num = len(self.intensity_df_list)
+        All_cell_list = []
+        for num in range(repeat_num):
+            cell_list = [self.intensity_df_list[num][x] for x in label_list]
+            cell_list = [pd.DataFrame(x) for x in cell_list]
+            for i,j in zip(cell_list,label):
+                i.columns = ["intensity"]
+                i["time"] = time_list
+                i["Voltage"] = self.Vol_list[num]
+                i["ID"] = j
+                i["repeat"] = num
+            if num == 0:
+                All_cell_list = cell_list
+            else :
+                for i in range(len(All_cell_list)):
+                    All_cell_list[i] = pd.concat([All_cell_list[i],cell_list[i]])
+        self.all_df = pd.concat(All_cell_list)
+        self.all_df["stim"] = 210
+        self.all_df.to_csv(self.out_dir+"/"+self.expname+".csv")
+                
+                
+        
+        """
         self.save_series_csv(self.intensity_df_list,"raw")
         self.save_series_csv(self.rate_df_list,"rate")
         self.save_series_csv(self.diff_df_list,"diff")
         self.save_series_csv(self.diffSeries_df_list,"diffSeries")
         
         self.save_feature_csv(self.f_basal_df,"basal")
-        
+        """
     #save_smart_CSV(self):
      #   self.intensity_df_list
