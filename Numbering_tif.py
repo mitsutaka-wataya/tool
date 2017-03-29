@@ -216,6 +216,47 @@ def add_vol4(num):
     if num%14 == 0:
         return("Stream_" + numbering(num) + "_0V.tif" )
     
+def add_vol5(num,i):
+    if i%20 == 1:
+        return(num + "_00V.tif" )
+    if i%20 == 2:
+        return(num + "_05V.tif" )
+    if i%20 == 3:
+        return(num + "_10V.tif" )
+    if i%20 == 4:
+        return(num + "_15V.tif" )
+    if i%20 == 5:
+        return(num + "_20V.tif" )
+    if i%20 == 6:
+        return(num + "_25V.tif" )
+    if i%20 == 7:
+        return(num + "_30V.tif" )
+    if i%20 == 8:
+        return(num + "_35V.tif" )
+    if i%20 == 9:
+        return(num + "_40V.tif" )
+    if i%20 == 10:
+        return(num+"_50V.tif" )
+    if i%20 == 11:
+        return(num+"_50V.tif" )
+    if i%20 == 12:
+        return(num+"_40V.tif" )
+    if i%20 == 13:
+        return(num+"_35V.tif" )
+    if i%20 == 14:
+        return(num+"_30V.tif" )
+    if i%20 == 15:
+        return(num+ "_25V.tif" )
+    if i%20 == 16:
+        return(num+ "_20V.tif" )
+    if i%20 == 17:
+        return(num+ "_15V.tif" )
+    if i%20 == 18:
+        return(num+ "_10V.tif" )
+    if i%20 == 19:
+        return(num+ "_05V.tif" )
+    if i%20 == 0:
+        return(num+ "_00V.tif" )
 def add_all_0V(num):
     return("Stream_" + numbering(num) + "_0V.tif" )
     
@@ -232,25 +273,17 @@ def numbering(num):
 def main(path,all0V = False):
     path.replace("\\","/")    
     os.chdir(path)
-    origin_name = glob.glob("Stream*.tif")
-    pattern = r"[0-9]+"
+    origin_name = glob.glob("70ms*.tif")
+    #pattern = r"[0-9]+"
     #number = [re.search(pattern,i) for i in origin_name]
     #number = [i.group() for i in number]
+    j = 1
     for i in origin_name:
-        num = re.search(pattern,i)
-        if num:        
-            num = num.group()  
-            num = int(num)
-            num = num
-            if all0V:
-                os.rename(i,add_all_0V(num))
-            else:
-                os.rename(i,add_vol3(num))
-        else:
-            num = 1
-            os.rename(i,add_vol4(int(num)))
+        name = i.split(".")[0]
+        os.rename(i,add_vol5(name,j))
+        j += 1
     os.chdir("..")
-    os.chdir("..")
+    #os.chdir("..")
 #print("fir")
 #main(path="C:/Users/waizoo/Desktop/ラボ/結果/161117/3_2_int30s_hoechst")
         

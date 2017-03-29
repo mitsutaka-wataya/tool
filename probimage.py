@@ -25,7 +25,7 @@ import multiprocess as mp
 
 class Label_Image(object):
     #dir means experiment data directory
-    def __init__(self,dir=None,roi=None,label_image=None,mask=True,exp_type=None,mask_type=1,split=False,back_ground_subtract=True,plot_back_hist=False,SBtype=1):
+    def __init__(self,dir=None,roi=None,label_image=None,mask=True,exp_type=None,mask_type=1,split=False,back_ground_subtract=True,plot_back_hist=False,SBtype=1,backf="mean",stim = 210):
         """
         exp_type 0: error
         exp_type 1: 0,3,10,20,30,50,100,50,30,20,10,3,0V
@@ -48,9 +48,10 @@ class Label_Image(object):
         self.exp_type = exp_type
         self.dir = dir.replace("\\","/")
         self.expname = self.dir.split("/")[-1]
-        
+        self.back_feature = backf
         self.frame_time = 70
         self.area_thresh = 500
+        self.stim_time = stim
         if back_ground_subtract:
             if SBtype == 1:self.out_dir=self.dir + "/output_ind_subback_by_mode"
             elif SBtype == 2:self.out_dir=self.dir + "/output_stream_subback_by_mode"
@@ -82,12 +83,15 @@ class Label_Image(object):
             start_time = self.get_time()
             
             #read mask image
-            mask_dir = glob.glob(dir+"/"+str(mask_type)+"*mask*.tif")
+            mask_dir = glob.glob(dir+"/other/"+str(mask_type)+"*mask*.tif")
             mask_dir = mask_dir[0].replace("\\","/")
             mask_fig = io.imread(mask_dir)
-            self.labelimage = measure.label(mask_fig)           
-            back_ground_label=(mask_fig+1)*(mask_fig==0)
+            self.labelimage = measure.label(mask_fig)
             
+            back_ground_label_dir = glob.glob(dir+"/other/back.tif")
+            back_ground_label_dir = back_ground_label_dir[0].replace("\\","/")
+            back_ground_label_image = io.imread(back_ground_label_dir)
+            back_ground_label = measure.label(back_ground_label_image)
             # remove small object
             sizes = mal.labeled_size(self.labelimage)            
             self.labelimage = mal.remove_regions_where(self.labelimage,sizes<self.area_thresh)
@@ -97,10 +101,11 @@ class Label_Image(object):
             # get each average of intensity and remove back ground  
             label_props = regionprops(self.labelimage)
             self.label_area = [i.area for i in label_props]
-            self.back_mod = []
+            self.back = []
             self.intensity_df_list = [self.get_stream_label_intensity(i,back_ground_label,SBtype=SBtype,plot_hist=plot_back_hist) for i in stream_fname]
-            self.back_mod= pd.DataFrame(self.back_mod)
-            self.back_mod.to_csv(self.out_dir+"/background_mode.csv")
+            self.back= pd.DataFrame(self.back)
+            self.back.columns = ["mean","minimum","median","mode"]
+            self.back.to_csv(self.out_dir+"/background.csv")
             
             end_time=self.get_time()            
             print("intensity was mesured successfuly!!")
@@ -167,9 +172,22 @@ class Label_Image(object):
             if SBtype==1:
                 #every photos subtract by every photos's background
                 back_region = measure.regionprops(labeled_back,intensity_image)[0]
-                back_val = back_region.intensity_image[back_region.coords[:,0],back_region.coords[:,1]]
-                back_intensity,counts = stats.mstats.mode(back_val)
-                self.back_mod += [back_intensity]
+                #back_val = back_region.intensity_image[back_region.coords[:,0],back_region.coords[:,1]]
+                
+                mean = np.mean(back_region.intensity_image.flatten())
+                mode,counts = stats.mstats.mode(back_region.intensity_image.flatten())
+                minimum = np.min(back_region.intensity_image.flatten())
+                median = np.median(back_region.intensity_image.flatten())
+                
+                if self.back_feature == "mean":
+                    back_intensity = mean
+                elif self.back_feature == "mode":
+                    back_intensity = mode
+                elif self.back_feature == "min":
+                    back_intensity = minimum
+                elif self.back_feature == "median":
+                    back_intensity = median
+                self.back += [[mean,minimum,median,mode]]
                 df = pd.DataFrame(int_mean).T - back_intensity
                 return(pd.concat([int_df,df]))
                 
@@ -204,7 +222,7 @@ class Label_Image(object):
         if SBtype==2:
             back_intensity,counts = stats.mstats.mode(self.back_val)
             int_df = int_df - back_intensity
-            self.back_mod += [back_intensity]  
+            self.back += [back_intensity]  
             if plot_hist:
                 #plot back ground hist
                 plt.figure()
@@ -651,7 +669,7 @@ class Label_Image(object):
                 for i in range(len(All_cell_list)):
                     All_cell_list[i] = pd.concat([All_cell_list[i],cell_list[i]])
         self.all_df = pd.concat(All_cell_list)
-        self.all_df["stim"] = 210
+        self.all_df["stim"] = self.all_df.time >= self.stim_time
         self.all_df.to_csv(self.out_dir+"/"+self.expname+".csv")
                 
                 
