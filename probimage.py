@@ -670,6 +670,7 @@ class Label_Image(object):
                     All_cell_list[i] = pd.concat([All_cell_list[i],cell_list[i]])
         self.all_df = pd.concat(All_cell_list)
         self.all_df["stim"] = self.all_df.time >= self.stim_time
+        self.all_df.reset_index(drop=True,inplace=True)
         self.all_df.to_csv(self.out_dir+"/"+self.expname+".csv")
                 
                 
