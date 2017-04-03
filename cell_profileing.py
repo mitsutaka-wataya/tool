@@ -7,6 +7,7 @@ Created on Thu Feb  9 16:15:31 2017
 import pandas as pd
 from scipy import stats 
 from scipy.optimize import curve_fit
+from scipy import integrate
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
@@ -85,11 +86,16 @@ class Cell(object):
         sig_diff = []
         count_sd = []
         cell_ID = []
-        
+        Voltage = []
+        pre_timeconst = []
+        post_timeconst = []
+        preAUC = []
+        postAUC =[]
         count=0
         for df in self.stream:
             df = df.sort("time")
             repeat_num += [df["repeat"].iloc[0]]
+            Voltage += [int(df.Voltage[0])]            
             prebasal = df[df.stim==False].intensity.mean()
             pre_basal += [prebasal]            
             prestd = df[df.stim==False].intensity.std()
@@ -99,13 +105,36 @@ class Cell(object):
             max_int += [maxint]
             peaktime = df[df.intensity == maxint]
             peaktime = peaktime[peaktime.stim == True].time.min()
-            peaktime = np.int(peaktime)
-            
+            peaktime = np.int(peaktime)            
             peak_time += [peaktime]
             amp = (np.double(maxint-prebasal))
             amplitude+=[amp]
             snr = np.double((maxint-prebasal)/prestd)
             snrate += [snr]
+            
+            t = df.time.iloc[3] - df.time.iloc[2]
+            pretime = np.array([ peaktime -3*t ,peaktime -2*t,peaktime - 1*t,peaktime])
+            preint = np.array([df[df.time==pretime[0]].intensity.max(),df[df.time==pretime[1]].intensity.max(),df[df.time==pretime[2]].intensity.max(),maxint])
+            preAUC += [integrate.simps(preint,pretime)]
+            x1 = pretime[(preint - ((preint[-1]-preint[0])/2 + preint[0]))  <= 0].max()
+            x2 = x1+t
+            y1 = df[df.time == x1].intensity.max()
+            y2 = df[df.time == x2].intensity.max()
+            preharf = (x1 + (x2-x1)*((0.5*maxint - y1)/(y2-y1)))
+            pre_timeconst += [preharf]
+
+            posttime = df[df.time >= peaktime].time.values
+            postint = df[df.time >= peaktime].intensity.values
+            postAUC += [integrate.simps(postint,posttime)]
+            x1 = posttime[ (postint - ((postint[0]-postint[-1])/2 + postint[-1])) >= 0].max()
+            x2 = x1+t
+            y1 = df[df.time == x1].intensity.max()
+            y2 = df[df.time == x2].intensity.max()
+            postharf = (x1 + (x2-x1)*((y1 - 0.5*maxint)/(y1-y2)))
+            post_timeconst += [postharf]
+            
+            
+            
             p = stats.mannwhitneyu(df[df.stim ==True].intensity,df[df.stim ==False].intensity,alternative="greater")      
             p = p.pvalue
             p_value += [p]
@@ -135,6 +164,7 @@ class Cell(object):
 
         
         self.propaty = pd.DataFrame({ "repeat":repeat_num ,
+                                      "Voltage":Voltage,
                                       "pre_basal":pre_basal ,
                                       "pre_std":pre_std ,
                                       "post_std":post_std ,
@@ -142,6 +172,10 @@ class Cell(object):
                                       "peak_time":peak_time,
                                       "amplitude":amplitude,
                                       "SNrate":snrate ,
+                                      "pre_timeconst":pre_timeconst,
+                                      "post_timeconst":post_timeconst,
+                                      "preAUC":preAUC,
+                                      "postAUC":postAUC,
                                       "p_value":p_value ,
                                       "sig_diff":sig_diff, 
                                       "count_sd":count_sd,
@@ -238,7 +272,7 @@ class All_exp(object):
         sns.plt.show()
        
             
-            
+
             
             
             
