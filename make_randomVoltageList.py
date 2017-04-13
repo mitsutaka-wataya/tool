@@ -31,12 +31,12 @@ def make_random_list(Voltage,repeat=20):
 
 if __name__ == "__main__":
     x=[0,5,10,15,20,25,30,35,40,50]
-    rep_n = 20
+    rep_n = 10
     
     df_sub,sub4exp = make_random_list(x,rep_n)
     df_all,all4exp = make_allrandom_list(x,rep_n)
     
-    df_all.to_excel("input_all_rand_list.xlsx")
-    all4exp.T.to_excel("cheatsheet_all.xlsx")
-    df_sub.to_excel("input_sub_rand_list.xlsx")
-    sub4exp.T.to_excel("cheatsheet_sub.xlsx")
+    df_all.to_excel("input_rondamize_100_does_list.xlsx")
+    all4exp.T.to_excel("cheatsheet_rondamize_100_does.xlsx")
+    #df_sub.to_excel("input_sub_rand_list.xlsx")
+    #sub4exp.T.to_excel("cheatsheet_sub.xlsx")
