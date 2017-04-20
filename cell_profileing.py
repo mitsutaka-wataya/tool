@@ -12,6 +12,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
 import lowpass_filtter as lpf
+import os
 
 class AllCells(object):
     def __init__(self,fname):
@@ -22,6 +23,7 @@ class AllCells(object):
         self.repeat_prop = [i.propaty for i in self.cell]
         self.repeat_prop = pd.concat(self.repeat_prop)
         self.repeat_prop.reset_index(inplace=True)
+        self.feature = ["amplitude","AUC","preAUC","postAUC","waveform","peak_time","pre_timeconst","post_timeconst","SNrate"]
         
     def select_cell(self,limit = 0):        
         x=self.repeat_prop[self.repeat_prop.repeat == limit]
@@ -226,7 +228,35 @@ class Cell(object):
         print("t:"+str(parame[1]))        
         #fix_y = y/fix_y
         return(parame[0],parame[1])
-
+    
+    def plot_does(self,feature="amplitude",out=""):
+        pal=sns.dark_palette("blue", int(self.repeat_num))
+        grid =sns.FacetGrid(data=self.repeat_prop,col="ID",hue="repeat",col_wrap=5,palette=pal)
+        plt.rcParams["figure.dpi"] = 200
+        grid.map(plt.plot,"Voltage",feature,marker="o",ms=5,alpha=0.7)
+        grid.fig.suptitle('Voltage_vs_'+feature)
+        grid.fig.subplots_adjust(top=.9)
+        plt.savefig(out+"Does_"+feature)
+    def plot_all_does(self):
+        try:os.mkdir("DoesResponse")
+        except:print("directly has already existed")
+        for f in self.feature:
+            self.plot_does(feature=f,out="DoesResponse/")
+    def plot_hist(self,feature="amplitude"):
+        pal=sns.dark_palette("blue", int(10))
+        try:os.mkdir("hist_"+feature)
+        except:print("dirctly is already has existed")
+        for id in range(self.repeat_prop.ID.max()+1):
+            grid =sns.FacetGrid(data=self.repeat_prop[self.repeat_prop.ID==id],row="Voltage",hue="Voltage",aspect=4,palette=pal)
+            plt.rcParams["figure.dpi"] = 100
+            grid.map(sns.distplot,feature)
+            grid.fig.suptitle("ID_"+str(id)+"_"+feature)
+            grid.fig.subplots_adjust(top=.95)
+            plt.savefig("hist_"+feature+"/ID_"+str(id)+"_"+feature)
+    def plot_all_hist(self):
+        for f in self.feature:
+            self.plot_hist(f)
+            
 def breaching_functiion(x,b,t,c1):
     """
     if t1 < 0.01:
