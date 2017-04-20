@@ -91,6 +91,9 @@ class Cell(object):
         post_timeconst = []
         preAUC = []
         postAUC =[]
+        AUC = []
+        waveform = []
+        
         count=0
         for df in self.stream:
             df = df.sort("time")
@@ -126,6 +129,9 @@ class Cell(object):
             posttime = df[df.time >= peaktime].time.values
             postint = df[df.time >= peaktime].intensity.values
             postAUC += [integrate.simps(postint,posttime)]
+                        
+            AUC += [integrate.simps(postint,posttime) + integrate.simps(preint,pretime)]
+            waveform += [(integrate.simps(postint,posttime) + integrate.simps(preint,pretime))/(maxint*(posttime.max()-pretime.min()))]
             x1 = posttime[ (postint - ((postint[0]-postint[-1])/2 + postint[-1])) >= 0].max()
             x2 = x1+t
             y1 = df[df.time == x1].intensity.max()
@@ -176,6 +182,8 @@ class Cell(object):
                                       "post_timeconst":post_timeconst,
                                       "preAUC":preAUC,
                                       "postAUC":postAUC,
+                                      "AUC":AUC,
+                                      "waveform":waveform,
                                       "p_value":p_value ,
                                       "sig_diff":sig_diff, 
                                       "count_sd":count_sd,
