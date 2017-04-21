@@ -13,17 +13,19 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 import lowpass_filtter as lpf
 import os
+import gc
 
 class AllCells(object):
     def __init__(self,fname):
         df = pd.read_csv(fname,index_col = 0)
+        self.stream = df.copy()
         self.repeat_num = df.repeat.max() + 1
         self.cell_num = df.ID.max() + 1
         self.cell = [Cell(df[df.ID == i],self.repeat_num) for i in range(self.cell_num) ]        
         self.repeat_prop = [i.propaty for i in self.cell]
         self.repeat_prop = pd.concat(self.repeat_prop)
         self.repeat_prop.reset_index(inplace=True)
-        self.feature = ["amplitude","AUC","preAUC","postAUC","waveform","peak_time","pre_timeconst","post_timeconst","SNrate"]
+        self.feature = ["amplitude","AUC","preAUC","postAUC","waveform","peak_time","pre_timeconst","post_timeconst","SNrate","pre_waveform","post_waveform"]
         
     def select_cell(self,limit = 0):        
         x=self.repeat_prop[self.repeat_prop.repeat == limit]
@@ -48,13 +50,14 @@ class AllCells(object):
         #self.base_timeconst = [i.fix_breach(i.propaty.pre_basal.values)[0] for i in self.cell]
         #self.amp_timeconst = [i.fix_breach(i.propaty.amplitude.values)[0] for i in self.cell]
     
-    def plot_cells_feature(self,feature="max_intensity"):
+    def show_cells_feature(self,feature="max_intensity"):
         #x = df["repeat"]        
         for i in self.cell:
             sns.plt.plot(i.propaty[feature],label=str(i.ID))
             sns.plt.legend()
             sns.plt.show()
-    def plot_stream(self,repeat_num=0):
+            
+    def show_stream(self,repeat_num=0):
         for i in self.cell:
             plt.plot(i.stream[repeat_num].time,i.stream[repeat_num].intensity,label=str(i.ID))
             plt.legend()
@@ -62,10 +65,86 @@ class AllCells(object):
             plt.show()
             print("repeat:"+str(i.stream[repeat_num].repeat.iloc[0]))
             print("count_sd:"+str(i.propaty[i.propaty.repeat == repeat_num].count_sd.values))
+    
+    def plot_does_scatter(self,feature="amplitude",out=""):
+        pal=sns.dark_palette("blue", int(self.repeat_num))
+        grid =sns.FacetGrid(data=self.repeat_prop,col="ID",hue="repeat",col_wrap=5,palette=pal)
+        plt.rcParams["figure.dpi"] = 200
+        grid.map(plt.plot,"Voltage",feature,marker="o",ms=5,alpha=0.7)
+        grid.fig.suptitle('Voltage_vs_'+feature)
+        grid.fig.subplots_adjust(top=.9)
+        plt.savefig(out+"Does_"+feature)
+        grid.fig.clf()
+        sns.plt.close()
+        gc.collect()
+    def plot_all_does_scatter(self):
+        try:os.mkdir("DoesResponse_scatter")
+        except:print("directly has already existed")
+        for f in self.feature:
+            self.plot_does_scatter(feature=f,out="DoesResponse_scatter/")
+    def plot_does(self,feature="amplitude",out=""):
+        pal=sns.dark_palette("blue", int(self.repeat_num))
+        grid=sns.lmplot(x="Voltage",y=feature,data=self.repeat_prop,col="ID",x_ci=95,fit_reg=False,col_wrap=5,palette=pal,x_estimator=np.mean)
+        plt.rcParams["figure.dpi"] = 100
+        #grid.map(sns.regplot,"Voltage","amplitude",x_estimator=np.mean)
+        grid.fig.suptitle('Voltage_vs_'+feature)
+        grid.fig.subplots_adjust(top=.9)
+        #grid.fig.tight_layout(w_pad=1)
+        plt.savefig(out+"Does_"+feature)
+        grid.fig.clf()
+        sns.plt.close()
+        gc.collect()
+    def plot_all_does(self):
+        try:os.mkdir("DoesResponse")
+        except:print("directly has already existed")
+        for f in self.feature:
+            self.plot_does(f,out="Doesresponse/")
+    def plot_hist(self,feature="amplitude"):
+        pal=sns.dark_palette("blue", int(10))
+        try:os.mkdir("hist_"+feature)
+        except:print("dirctly is already has existed")
+        
+        grid =sns.FacetGrid(data=self.repeat_prop,row="Voltage",hue="Voltage",aspect=4,palette=pal)
+        plt.rcParams["figure.dpi"] = 100
+        grid.map(sns.distplot,feature)
+        grid.fig.suptitle("Allcell_"+feature)
+        grid.fig.subplots_adjust(top=.95)
+        plt.savefig("hist_"+feature+"/Allcell_"+feature)
+        grid.fig.clf()
+        sns.plt.close()
+        gc.collect()
+        for id in range(self.repeat_prop.ID.max()+1):
+            grid =sns.FacetGrid(data=self.repeat_prop[self.repeat_prop.ID==id],row="Voltage",hue="Voltage",aspect=4,palette=pal)
+            plt.rcParams["figure.dpi"] = 100
+            grid.map(sns.distplot,feature)
+            grid.fig.suptitle("ID_"+str(id)+"_"+feature)
+            grid.fig.subplots_adjust(top=.95)
+            plt.savefig("hist_"+feature+"/ID_"+str(id)+"_"+feature)
+            grid.fig.clf()
+            sns.plt.close()
+            gc.collect()
+    def plot_all_hist(self):
+        for f in self.feature:
+            self.plot_hist(f)
+            
+    def plot_pairplot(self):
+        try:os.mkdir("pairplot")
+        except:print("dirctly is already has existed")
+        pal=sns.dark_palette("blue", int(10))
+        for id in range(int(self.repeat_prop.ID.max()+1)):
+            plt.rcParams["figure.dpi"] = 100
+            sns.pairplot(data=self.repeat_prop[self.repeat_prop.ID==id],hue="Voltage",palette=pal,vars=self.feature)
+            plt.suptitle('pairplot_ID_'+str(id))
+            plt.subplots_adjust(top=.95)
+            plt.savefig("pairplot/ID_"+str(id))
+            plt.fig.clf()
+            sns.plt.close()
+            gc.collect()
+            
 class Cell(object):
     def __init__(self,cell_df,repeat_num):
         self.stream = [cell_df[cell_df.repeat == i] for i in range(repeat_num)]
-        self.ID = self.stream[0].ID.iloc[0]     
+        self.ID = int(self.stream[0].ID.iloc[0])     
         self.make_df()
         if self.propaty.count_sd.min() == 1:
             self.max_repeat = 0
@@ -94,6 +173,8 @@ class Cell(object):
         preAUC = []
         postAUC =[]
         AUC = []
+        pre_waveform = []
+        post_waveform = []
         waveform = []
         
         count=0
@@ -120,7 +201,8 @@ class Cell(object):
             t = df.time.iloc[3] - df.time.iloc[2]
             pretime = np.array([ peaktime -3*t ,peaktime -2*t,peaktime - 1*t,peaktime])
             preint = np.array([df[df.time==pretime[0]].intensity.max(),df[df.time==pretime[1]].intensity.max(),df[df.time==pretime[2]].intensity.max(),maxint])
-            preAUC += [integrate.simps(preint,pretime)]
+            preauc = integrate.simps(preint,pretime)
+            preAUC += [preauc]
             x1 = pretime[(preint - ((preint[-1]-preint[0])/2 + preint[0]))  <= 0].max()
             x2 = x1+t
             y1 = df[df.time == x1].intensity.max()
@@ -130,10 +212,13 @@ class Cell(object):
 
             posttime = df[df.time >= peaktime].time.values
             postint = df[df.time >= peaktime].intensity.values
-            postAUC += [integrate.simps(postint,posttime)]
-                        
-            AUC += [integrate.simps(postint,posttime) + integrate.simps(preint,pretime)]
-            waveform += [(integrate.simps(postint,posttime) + integrate.simps(preint,pretime))/(maxint*(posttime.max()-pretime.min()))]
+            postauc = [integrate.simps(postint,posttime)]
+            postAUC += [postauc]            
+            AUC += [np.double(preauc+postauc)]
+            
+            pre_waveform += [np.double(preauc/(pretime.max()-pretime.min()))]
+            post_waveform += [np.double(postauc/(posttime.max()-posttime.min()))]
+            waveform += [np.double((preauc+postauc)/(maxint*(posttime.max()-pretime.min())))]
             x1 = posttime[ (postint - ((postint[0]-postint[-1])/2 + postint[-1])) >= 0].max()
             x2 = x1+t
             y1 = df[df.time == x1].intensity.max()
@@ -186,6 +271,8 @@ class Cell(object):
                                       "postAUC":postAUC,
                                       "AUC":AUC,
                                       "waveform":waveform,
+                                      "pre_waveform":pre_waveform,
+                                      "post_waveform":post_waveform,
                                       "p_value":p_value ,
                                       "sig_diff":sig_diff, 
                                       "count_sd":count_sd,
@@ -229,33 +316,7 @@ class Cell(object):
         #fix_y = y/fix_y
         return(parame[0],parame[1])
     
-    def plot_does(self,feature="amplitude",out=""):
-        pal=sns.dark_palette("blue", int(self.repeat_num))
-        grid =sns.FacetGrid(data=self.repeat_prop,col="ID",hue="repeat",col_wrap=5,palette=pal)
-        plt.rcParams["figure.dpi"] = 200
-        grid.map(plt.plot,"Voltage",feature,marker="o",ms=5,alpha=0.7)
-        grid.fig.suptitle('Voltage_vs_'+feature)
-        grid.fig.subplots_adjust(top=.9)
-        plt.savefig(out+"Does_"+feature)
-    def plot_all_does(self):
-        try:os.mkdir("DoesResponse")
-        except:print("directly has already existed")
-        for f in self.feature:
-            self.plot_does(feature=f,out="DoesResponse/")
-    def plot_hist(self,feature="amplitude"):
-        pal=sns.dark_palette("blue", int(10))
-        try:os.mkdir("hist_"+feature)
-        except:print("dirctly is already has existed")
-        for id in range(self.repeat_prop.ID.max()+1):
-            grid =sns.FacetGrid(data=self.repeat_prop[self.repeat_prop.ID==id],row="Voltage",hue="Voltage",aspect=4,palette=pal)
-            plt.rcParams["figure.dpi"] = 100
-            grid.map(sns.distplot,feature)
-            grid.fig.suptitle("ID_"+str(id)+"_"+feature)
-            grid.fig.subplots_adjust(top=.95)
-            plt.savefig("hist_"+feature+"/ID_"+str(id)+"_"+feature)
-    def plot_all_hist(self):
-        for f in self.feature:
-            self.plot_hist(f)
+
             
 def breaching_functiion(x,b,t,c1):
     """
