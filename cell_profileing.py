@@ -25,6 +25,8 @@ class AllCells(object):
         self.repeat_prop = [i.propaty for i in self.cell]
         self.repeat_prop = pd.concat(self.repeat_prop)
         self.repeat_prop.reset_index(inplace=True)
+        #self.Vol_num = 
+        
         self.feature = ["amplitude","AUC","preAUC","postAUC","waveform","peak_time","pre_timeconst","post_timeconst","SNrate","pre_waveform","post_waveform"]
         
     def select_cell(self,limit = 0):        
@@ -66,6 +68,17 @@ class AllCells(object):
             print("repeat:"+str(i.stream[repeat_num].repeat.iloc[0]))
             print("count_sd:"+str(i.propaty[i.propaty.repeat == repeat_num].count_sd.values))
     
+    def plot_stream(self):
+        try:os.mkdir("timeSeries")
+        except:print("directly has already existed")
+        for id in range(self.cell_num+1):
+            pal=sns.dark_palette("blue", self.repeat_num)
+            grid = sns.FacetGrid(data=self.stream[self.stream.ID==id],row="Voltage",hue="repeat",aspect=4,palette=pal)
+            plt.rcParams["figure.dpi"] = 200
+            grid.map(plt.plot,"time","intensity",ms=.7,alpha=0.4)
+            grid.fig.suptitle("ID_"+str(id)+"_timeSeries")
+            grid.fig.subplots_adjust(top=.95)
+            plt.savefig("timeSeries/ID_"+str(id)+"_timeSeries")
     def plot_does_scatter(self,feature="amplitude",out=""):
         pal=sns.dark_palette("blue", int(self.repeat_num))
         grid =sns.FacetGrid(data=self.repeat_prop,col="ID",hue="repeat",col_wrap=5,palette=pal)
@@ -130,14 +143,15 @@ class AllCells(object):
     def plot_pairplot(self):
         try:os.mkdir("pairplot")
         except:print("dirctly is already has existed")
-        pal=sns.dark_palette("blue", int(10))
+        pal=sns.dark_palette("blue", 10)
         for id in range(int(self.repeat_prop.ID.max()+1)):
+            x=self.repeat_prop[self.repeat_prop.ID==id].loc[:,self.feature+["Voltage"]]
             plt.rcParams["figure.dpi"] = 100
-            sns.pairplot(data=self.repeat_prop[self.repeat_prop.ID==id],hue="Voltage",palette=pal,vars=self.feature)
+            sns.pairplot(data=x,hue="Voltage",palette=pal)
             plt.suptitle('pairplot_ID_'+str(id))
             plt.subplots_adjust(top=.95)
             plt.savefig("pairplot/ID_"+str(id))
-            plt.fig.clf()
+            plt.clf()
             sns.plt.close()
             gc.collect()
             
