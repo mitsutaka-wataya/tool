@@ -230,8 +230,8 @@ class Cell(object):
             postAUC += [postauc]            
             AUC += [np.double(preauc+postauc)]
             
-            pre_waveform += [np.double(preauc/(pretime.max()-pretime.min()))]
-            post_waveform += [np.double(postauc/(posttime.max()-posttime.min()))]
+            pre_waveform += [np.double(preauc/((pretime.max()-pretime.min())*maxint))]
+            post_waveform += [np.double(postauc/((posttime.max()-posttime.min())*maxint))]
             waveform += [np.double((preauc+postauc)/(maxint*(posttime.max()-pretime.min())))]
             x1 = posttime[ (postint - ((postint[0]-postint[-1])/2 + postint[-1])) >= 0].max()
             x2 = x1+t
