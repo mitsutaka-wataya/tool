@@ -73,7 +73,7 @@ class AllCells(object):
         try:os.mkdir("timeSeries")
         except:print("directly has already existed")
         for id in range(self.cell_num):
-            pal=sns.dark_palette("blue", self.repeat_num)
+            pal=sns.color_palette("seismic", self.repeat_num)
             grid = sns.FacetGrid(data=self.stream[self.stream.ID==id],row="Voltage",hue="repeat",aspect=4,palette=pal)
             plt.rcParams["figure.dpi"] = 200
             grid.map(plt.plot,"time","intensity",ms=.7,alpha=0.4)
@@ -84,7 +84,7 @@ class AllCells(object):
         try:os.mkdir("diff_timeSeries")
         except:print("directly has already existed")
         for id in range(self.cell_num):
-            pal=sns.dark_palette("blue", self.repeat_num)
+            pal=sns.color_palette("seismic", self.repeat_num)
             grid = sns.FacetGrid(data=self.stream[self.stream.ID==id],row="Voltage",hue="repeat",aspect=4,palette=pal)
             plt.rcParams["figure.dpi"] = 200
             grid.map(plt.plot,"time","diff_intensity",ms=.7,alpha=0.4)
@@ -95,7 +95,7 @@ class AllCells(object):
         try:os.mkdir("rate_timeSeries")
         except:print("directly has already existed")
         for id in range(self.cell_num):
-            pal=sns.dark_palette("blue", self.repeat_num)
+            pal=sns.color_palette("seismic", self.repeat_num)
             grid = sns.FacetGrid(data=self.stream[self.stream.ID==id],row="Voltage",hue="repeat",aspect=4,palette=pal)
             plt.rcParams["figure.dpi"] = 200
             grid.map(plt.plot,"time","rate_intensity",ms=.7,alpha=0.4)
@@ -106,7 +106,7 @@ class AllCells(object):
         try:os.mkdir("norm_timeSeries")
         except:print("directly has already existed")
         for id in range(self.cell_num):
-            pal=sns.dark_palette("blue", self.repeat_num)
+            pal=sns.color_palette("seismic", self.repeat_num)
             grid = sns.FacetGrid(data=self.stream[self.stream.ID==id],row="Voltage",hue="repeat",aspect=4,palette=pal)
             plt.rcParams["figure.dpi"] = 200
             grid.map(plt.plot,"time","norm_intensity",ms=.7,alpha=0.4)
@@ -114,7 +114,7 @@ class AllCells(object):
             grid.fig.subplots_adjust(top=.95)
             plt.savefig("norm_timeSeries/ID_"+str(id)+"_norm_timeSeries")
     def plot_does_scatter(self,feature="amplitude",out=""):
-        pal=sns.dark_palette("blue", int(self.repeat_num))
+        pal=sns.color_palette("seismic", int(self.repeat_num))
         grid =sns.FacetGrid(data=self.repeat_prop,col="ID",hue="repeat",col_wrap=5,palette=pal)
         plt.rcParams["figure.dpi"] = 200
         grid.map(plt.plot,"Voltage",feature,marker="o",ms=5,alpha=0.7)
@@ -130,7 +130,7 @@ class AllCells(object):
         for f in self.feature:
             self.plot_does_scatter(feature=f,out="DoesResponse_scatter/")
     def plot_does(self,feature="amplitude",out=""):
-        pal=sns.dark_palette("blue", int(self.repeat_num))
+        pal=sns.color_palette("seismic", int(self.repeat_num))
         grid=sns.lmplot(x="Voltage",y=feature,data=self.repeat_prop,col="ID",x_ci=95,fit_reg=False,col_wrap=5,palette=pal,x_estimator=np.mean)
         plt.rcParams["figure.dpi"] = 100
         #grid.map(sns.regplot,"Voltage","amplitude",x_estimator=np.mean)
@@ -147,7 +147,7 @@ class AllCells(object):
         for f in self.feature:
             self.plot_does(f,out="Doesresponse/")
     def plot_hist(self,feature="amplitude"):
-        pal=sns.dark_palette("blue", int(10))
+        pal=sns.color_palette("seismic", int(10))
         try:os.mkdir("hist_"+feature)
         except:print("dirctly is already has existed")
         
@@ -177,7 +177,7 @@ class AllCells(object):
     def plot_pairplot(self):
         try:os.mkdir("pairplot")
         except:print("dirctly is already has existed")
-        pal=sns.dark_palette("blue", 10)
+        pal=sns.color_palette("seismic", 10)
         for id in range(int(self.repeat_prop.ID.max()+1)):
             x=self.repeat_prop[self.repeat_prop.ID==id].loc[:,self.feature+["Voltage"]]
             plt.rcParams["figure.dpi"] = 100
