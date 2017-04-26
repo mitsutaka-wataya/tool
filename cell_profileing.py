@@ -25,9 +25,10 @@ class AllCells(object):
         self.repeat_prop = [i.propaty for i in self.cell]
         self.repeat_prop = pd.concat(self.repeat_prop)
         self.repeat_prop.reset_index(inplace=True)
-        #self.Vol_num = 
+        self.stream = pd.concat([i.tmseries for i in self.cell])
+        self.repeat_prop.to_csv("feature_"+fname,index=False)
         
-        self.feature = ["amplitude","AUC","preAUC","postAUC","waveform","peak_time","pre_timeconst","post_timeconst","SNrate","pre_waveform","post_waveform"]
+        self.feature = ["amplitude","AUC","preAUC","postAUC","waveform","peak_time","pre_timeconst","post_timeconst","SNrate","pre_waveform","post_waveform","fold_change"]
         
     def select_cell(self,limit = 0):        
         x=self.repeat_prop[self.repeat_prop.repeat == limit]
@@ -71,7 +72,7 @@ class AllCells(object):
     def plot_stream(self):
         try:os.mkdir("timeSeries")
         except:print("directly has already existed")
-        for id in range(self.cell_num+1):
+        for id in range(self.cell_num):
             pal=sns.dark_palette("blue", self.repeat_num)
             grid = sns.FacetGrid(data=self.stream[self.stream.ID==id],row="Voltage",hue="repeat",aspect=4,palette=pal)
             plt.rcParams["figure.dpi"] = 200
@@ -79,6 +80,39 @@ class AllCells(object):
             grid.fig.suptitle("ID_"+str(id)+"_timeSeries")
             grid.fig.subplots_adjust(top=.95)
             plt.savefig("timeSeries/ID_"+str(id)+"_timeSeries")
+    def plot_diff_stream(self):
+        try:os.mkdir("diff_timeSeries")
+        except:print("directly has already existed")
+        for id in range(self.cell_num):
+            pal=sns.dark_palette("blue", self.repeat_num)
+            grid = sns.FacetGrid(data=self.stream[self.stream.ID==id],row="Voltage",hue="repeat",aspect=4,palette=pal)
+            plt.rcParams["figure.dpi"] = 200
+            grid.map(plt.plot,"time","diff_intensity",ms=.7,alpha=0.4)
+            grid.fig.suptitle("ID_"+str(id)+"_diff_timeSeries")
+            grid.fig.subplots_adjust(top=.95)
+            plt.savefig("diff_timeSeries/ID_"+str(id)+"_diff_timeSeries")
+    def plot_rate_stream(self):
+        try:os.mkdir("rate_timeSeries")
+        except:print("directly has already existed")
+        for id in range(self.cell_num):
+            pal=sns.dark_palette("blue", self.repeat_num)
+            grid = sns.FacetGrid(data=self.stream[self.stream.ID==id],row="Voltage",hue="repeat",aspect=4,palette=pal)
+            plt.rcParams["figure.dpi"] = 200
+            grid.map(plt.plot,"time","rate_intensity",ms=.7,alpha=0.4)
+            grid.fig.suptitle("ID_"+str(id)+"_rate_timeSeries")
+            grid.fig.subplots_adjust(top=.95)
+            plt.savefig("rate_timeSeries/ID_"+str(id)+"_rate_timeSeries")
+    def plot_norm_stream(self):
+        try:os.mkdir("norm_timeSeries")
+        except:print("directly has already existed")
+        for id in range(self.cell_num):
+            pal=sns.dark_palette("blue", self.repeat_num)
+            grid = sns.FacetGrid(data=self.stream[self.stream.ID==id],row="Voltage",hue="repeat",aspect=4,palette=pal)
+            plt.rcParams["figure.dpi"] = 200
+            grid.map(plt.plot,"time","norm_intensity",ms=.7,alpha=0.4)
+            grid.fig.suptitle("ID_"+str(id)+"_norm_timeSeries")
+            grid.fig.subplots_adjust(top=.95)
+            plt.savefig("norm_timeSeries/ID_"+str(id)+"_norm_timeSeries")
     def plot_does_scatter(self,feature="amplitude",out=""):
         pal=sns.dark_palette("blue", int(self.repeat_num))
         grid =sns.FacetGrid(data=self.repeat_prop,col="ID",hue="repeat",col_wrap=5,palette=pal)
@@ -158,12 +192,25 @@ class AllCells(object):
 class Cell(object):
     def __init__(self,cell_df,repeat_num):
         self.stream = [cell_df[cell_df.repeat == i] for i in range(repeat_num)]
+        self.tmseries = cell_df.copy()
         self.ID = int(self.stream[0].ID.iloc[0])     
         self.make_df()
         if self.propaty.count_sd.min() == 1:
             self.max_repeat = 0
         else:
             self.max_repeat = self.propaty[self.propaty.count_sd == 0].repeat.max()
+        
+        
+        diff = [i.intensity.values for i in self.stream]
+        rate = [i.intensity.values for i in self.stream]
+        norm = [i.intensity.values for i in self.stream]        
+        for i in range(repeat_num):
+            diff[i] = diff[i] - np.double(self.propaty[self.propaty.repeat==i].pre_basal)
+            rate[i] = rate[i] / np.double(self.propaty[self.propaty.repeat==i].pre_basal)
+            norm[i] = (norm[i] - np.double(self.propaty[self.propaty.repeat==i].pre_basal))/np.double(self.propaty[self.propaty.repeat==i].pre_basal)
+        self.tmseries["diff_intensity"] = list(np.concatenate(diff)) 
+        self.tmseries["rate_intensity"] = list(np.concatenate(rate))
+        self.tmseries["norm_intensity"] = list(np.concatenate(norm))
     def remove_no_excite(self):
         self.propaty = self.propaty[self.propaty.count_sd <3]
         print(len(self.propaty))
@@ -190,6 +237,7 @@ class Cell(object):
         pre_waveform = []
         post_waveform = []
         waveform = []
+        fold_change = [] 
         
         count=0
         for df in self.stream:
@@ -211,12 +259,14 @@ class Cell(object):
             amplitude+=[amp]
             snr = np.double((maxint-prebasal)/prestd)
             snrate += [snr]
+            frc = maxint/prebasal
+            fold_change += [frc]
             
             t = df.time.iloc[3] - df.time.iloc[2]
             pretime = np.array([ peaktime -3*t ,peaktime -2*t,peaktime - 1*t,peaktime])
             preint = np.array([df[df.time==pretime[0]].intensity.max(),df[df.time==pretime[1]].intensity.max(),df[df.time==pretime[2]].intensity.max(),maxint])
             preauc = integrate.simps(preint,pretime)
-            preAUC += [preauc]
+            preAUC += [np.double(preauc)]
             x1 = pretime[(preint - ((preint[-1]-preint[0])/2 + preint[0]))  <= 0].max()
             x2 = x1+t
             y1 = df[df.time == x1].intensity.max()
@@ -226,8 +276,8 @@ class Cell(object):
 
             posttime = df[df.time >= peaktime].time.values
             postint = df[df.time >= peaktime].intensity.values
-            postauc = [integrate.simps(postint,posttime)]
-            postAUC += [postauc]            
+            postauc = integrate.simps(postint,posttime)
+            postAUC += [np.double(postauc)]            
             AUC += [np.double(preauc+postauc)]
             
             pre_waveform += [np.double(preauc/((pretime.max()-pretime.min())*maxint))]
@@ -279,6 +329,7 @@ class Cell(object):
                                       "peak_time":peak_time,
                                       "amplitude":amplitude,
                                       "SNrate":snrate ,
+                                      "fold_change":fold_change,
                                       "pre_timeconst":pre_timeconst,
                                       "post_timeconst":post_timeconst,
                                       "preAUC":preAUC,
