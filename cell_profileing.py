@@ -25,10 +25,25 @@ class AllCells(object):
         self.repeat_prop = [i.propaty for i in self.cell]
         self.repeat_prop = pd.concat(self.repeat_prop)
         self.repeat_prop.reset_index(inplace=True)
-        self.stream = pd.concat([i.tmseries for i in self.cell])
-        self.repeat_prop.to_csv("feature_"+fname,index=False)
+        self.diff_repeat_prop = [i.diff_propaty for i in self.cell]
+        self.diff_repeat_prop = pd.concat(self.diff_repeat_prop)
+        self.diff_repeat_prop.reset_index(inplace=True)
+        self.rate_repeat_prop = [i.rate_propaty for i in self.cell]
+        self.rate_repeat_prop = pd.concat(self.rate_repeat_prop)
+        self.rate_repeat_prop.reset_index(inplace=True)
+        self.norm_repeat_prop = [i.norm_propaty for i in self.cell]
+        self.norm_repeat_prop = pd.concat(self.norm_repeat_prop)
+        self.norm_repeat_prop.reset_index(inplace=True)        
         
-        self.feature = ["amplitude","AUC","preAUC","postAUC","waveform","peak_time","pre_timeconst","post_timeconst","SNrate","pre_waveform","post_waveform","fold_change"]
+        self.stream = pd.concat([i.tmseries for i in self.cell])
+        self.stream.to_csv("time_series.csv")
+        
+        self.repeat_prop.to_csv("feature_raw_"+fname,index=False)
+        self.diff_repeat_prop.to_csv("feature_diff_"+fname,index=False)
+        self.rate_repeat_prop.to_csv("feature_rate_"+fname,index=False)
+        self.norm_repeat_prop.to_csv("feature_norm_"+fname,index=False)
+        
+        self.feature = ["amplitude","AUC","preAUC","postAUC","waveform","peak_time","pre_timeconst","post_timeconst","SNrate","pre_waveform","post_waveform"]
         
     def select_cell(self,limit = 0):        
         x=self.repeat_prop[self.repeat_prop.repeat == limit]
@@ -113,11 +128,13 @@ class AllCells(object):
             grid.fig.suptitle("ID_"+str(id)+"_norm_timeSeries")
             grid.fig.subplots_adjust(top=.95)
             plt.savefig("norm_timeSeries/ID_"+str(id)+"_norm_timeSeries")
-    def plot_does_scatter(self,feature="amplitude",out=""):
+            
+    def plot_does_scatter(self,propaty,feature="amplitude",out=""):
         pal=sns.color_palette("seismic", int(self.repeat_num))
-        grid =sns.FacetGrid(data=self.repeat_prop,col="ID",hue="repeat",col_wrap=5,palette=pal)
+        #grid =sns.FacetGrid(data=propaty,col="ID",hue="repeat",col_wrap=5,palette=pal)
+        grid = sns.factorplot(x='Voltage', y=feature, data=propaty,col="ID", hue='repeat', kind='swarm', col_wrap=5,palette=pal)
         plt.rcParams["figure.dpi"] = 200
-        grid.map(plt.plot,"Voltage",feature,marker="o",ms=5,alpha=0.7)
+        #grid.map(sns.factorplot,"Voltage",feature,data=propaty,kind="swarm",alpha=0.7)
         grid.fig.suptitle('Voltage_vs_'+feature)
         grid.fig.subplots_adjust(top=.9)
         plt.savefig(out+"Does_"+feature)
@@ -127,11 +144,24 @@ class AllCells(object):
     def plot_all_does_scatter(self):
         try:os.mkdir("DoesResponse_scatter")
         except:print("directly has already existed")
+        try:os.mkdir("DoesResponse_scatter_diff")
+        except:print("directly has already existed")
+        try:os.mkdir("DoesResponse_scatter_rate")
+        except:print("directly has already existed")
+        try:os.mkdir("DoesResponse_scatter_norm")
+        except:print("directly has already existed")
         for f in self.feature:
-            self.plot_does_scatter(feature=f,out="DoesResponse_scatter/")
-    def plot_does(self,feature="amplitude",out=""):
+            self.plot_does_scatter(feature=f,out="DoesResponse_scatter/",propaty=self.repeat_prop)
+        for f in self.feature:
+            self.plot_does_scatter(feature=f,out="DoesResponse_scatter_diff/",propaty=self.diff_repeat_prop)
+        for f in self.feature:
+            self.plot_does_scatter(feature=f,out="DoesResponse_scatter_rate/",propaty=self.rate_repeat_prop)
+        for f in self.feature:
+            self.plot_does_scatter(feature=f,out="DoesResponse_scatter_norm/",propaty=self.norm_repeat_prop)
+
+    def plot_does(self,propaty,feature="amplitude",out=""):
         pal=sns.color_palette("seismic", int(self.repeat_num))
-        grid=sns.lmplot(x="Voltage",y=feature,data=self.repeat_prop,col="ID",x_ci=95,fit_reg=False,col_wrap=5,palette=pal,x_estimator=np.mean)
+        grid=sns.lmplot(x="Voltage",y=feature,data=propaty,col="ID",x_ci=95,fit_reg=False,col_wrap=5,palette=pal,x_estimator=np.mean)
         plt.rcParams["figure.dpi"] = 100
         #grid.map(sns.regplot,"Voltage","amplitude",x_estimator=np.mean)
         grid.fig.suptitle('Voltage_vs_'+feature)
@@ -144,35 +174,62 @@ class AllCells(object):
     def plot_all_does(self):
         try:os.mkdir("DoesResponse")
         except:print("directly has already existed")
-        for f in self.feature:
-            self.plot_does(f,out="Doesresponse/")
-    def plot_hist(self,feature="amplitude"):
-        pal=sns.color_palette("seismic", int(10))
-        try:os.mkdir("hist_"+feature)
-        except:print("dirctly is already has existed")
+        try:os.mkdir("DoesResponse_diff")
+        except:print("directly has already existed")
+        try:os.mkdir("DoesResponse_rate")
+        except:print("directly has already existed")
+        try:os.mkdir("DoesResponse_norm")
+        except:print("directly has already existed")
         
-        grid =sns.FacetGrid(data=self.repeat_prop,row="Voltage",hue="Voltage",aspect=4,palette=pal)
+        for f in self.feature:
+            self.plot_does(feature=f,out="Doesresponse/",propaty=self.repeat_prop)
+        for f in self.feature:
+            self.plot_does(feature=f,out="Doesresponse_diff/",propaty=self.diff_repeat_prop)
+        for f in self.feature:
+            self.plot_does(feature=f,out="Doesresponse_rate/",propaty=self.rate_repeat_prop)
+        for f in self.feature:
+            self.plot_does(feature=f,out="Doesresponse_norm/",propaty=self.norm_repeat_prop)
+            
+    def plot_hist(self,propaty,out,feature="amplitude"):
+        #pal=sns.color_palette("seismic", int(10))
+        try:os.mkdir(out+"hist_"+feature)
+        except:print("dirctly is already has existed")
+        grid =sns.FacetGrid(data=propaty,row="Voltage",hue="Voltage",aspect=4)
         plt.rcParams["figure.dpi"] = 100
-        grid.map(sns.distplot,feature)
+        grid.map(sns.distplot,feature,rug=True,color="b")
         grid.fig.suptitle("Allcell_"+feature)
         grid.fig.subplots_adjust(top=.95)
-        plt.savefig("hist_"+feature+"/Allcell_"+feature)
+        plt.savefig(out+"hist_"+feature+"/Allcell_"+feature)
         grid.fig.clf()
         sns.plt.close()
         gc.collect()
         for id in range(self.repeat_prop.ID.max()+1):
-            grid =sns.FacetGrid(data=self.repeat_prop[self.repeat_prop.ID==id],row="Voltage",hue="Voltage",aspect=4,palette=pal)
+            grid =sns.FacetGrid(data=propaty[propaty.ID==id],row="Voltage",hue="Voltage",aspect=4)
             plt.rcParams["figure.dpi"] = 100
-            grid.map(sns.distplot,feature)
+            grid.map(sns.distplot,feature,rug=True,color="b")
             grid.fig.suptitle("ID_"+str(id)+"_"+feature)
             grid.fig.subplots_adjust(top=.95)
-            plt.savefig("hist_"+feature+"/ID_"+str(id)+"_"+feature)
+            plt.savefig(out+"hist_"+feature+"/ID_"+str(id)+"_"+feature)
             grid.fig.clf()
             sns.plt.close()
             gc.collect()
     def plot_all_hist(self):
+        try:os.mkdir("hist")
+        except:print("dirctly is already has existed")
+        try:os.mkdir("hist_diff")
+        except:print("dirctly is already has existed")
+        try:os.mkdir("hist_rate")
+        except:print("dirctly is already has existed")
+        try:os.mkdir("hist_norm")
+        except:print("dirctly is already has existed")
         for f in self.feature:
-            self.plot_hist(f)
+            self.plot_hist(feature=f,out="hist/",propaty=self.repeat_prop)
+        for f in self.feature:
+            self.plot_hist(feature=f,out="hist_diff/",propaty=self.diff_repeat_prop)
+        for f in self.feature:
+            self.plot_hist(feature=f,out="hist_rate/",propaty=self.rate_repeat_prop)
+        for f in self.feature:
+            self.plot_hist(feature=f,out="hist_norm/",propaty=self.norm_repeat_prop)
             
     def plot_pairplot(self):
         try:os.mkdir("pairplot")
@@ -194,12 +251,11 @@ class Cell(object):
         self.stream = [cell_df[cell_df.repeat == i] for i in range(repeat_num)]
         self.tmseries = cell_df.copy()
         self.ID = int(self.stream[0].ID.iloc[0])     
-        self.make_df()
+        self.propaty = self.make_df(self.stream,fc=True)
         if self.propaty.count_sd.min() == 1:
             self.max_repeat = 0
         else:
             self.max_repeat = self.propaty[self.propaty.count_sd == 0].repeat.max()
-        
         
         diff = [i.intensity.values for i in self.stream]
         rate = [i.intensity.values for i in self.stream]
@@ -211,10 +267,25 @@ class Cell(object):
         self.tmseries["diff_intensity"] = list(np.concatenate(diff)) 
         self.tmseries["rate_intensity"] = list(np.concatenate(rate))
         self.tmseries["norm_intensity"] = list(np.concatenate(norm))
+        
+        diff = [self.tmseries[self.tmseries.repeat == i].copy() for i in range(repeat_num)]
+        diff = [i.loc[:,["diff_intensity","time","Voltage","ID","repeat","stim"]] for i in diff]
+        diff = [i.rename(columns={"diff_intensity":"intensity"})for i in diff]
+        rate = [self.tmseries[self.tmseries.repeat == i].copy() for i in range(repeat_num)]
+        rate = [i.loc[:,["rate_intensity","time","Voltage","ID","repeat","stim"]] for i in rate]
+        rate = [i.rename(columns={"rate_intensity":"intensity"})for i in rate]
+        norm = [self.tmseries[self.tmseries.repeat == i].copy() for i in range(repeat_num)]
+        norm = [i.loc[:,["norm_intensity","time","Voltage","ID","repeat","stim"]] for i in norm]
+        norm = [i.rename(columns={"norm_intensity":"intensity"})for i in norm]
+        
+        self.diff_propaty = self.make_df(diff,fc=False)
+        self.rate_propaty = self.make_df(rate,fc=False)
+        self.norm_propaty = self.make_df(norm,fc=False)
+        
     def remove_no_excite(self):
         self.propaty = self.propaty[self.propaty.count_sd <3]
         print(len(self.propaty))
-    def make_df(self):
+    def make_df(self,ts_list,fc=True):
         alpha = 0.01
         repeat_num = []
         pre_basal = []
@@ -240,7 +311,7 @@ class Cell(object):
         fold_change = [] 
         
         count=0
-        for df in self.stream:
+        for df in ts_list:
             df = df.sort("time")
             repeat_num += [df["repeat"].iloc[0]]
             Voltage += [int(df["Voltage"].iloc[0])]            
@@ -259,8 +330,10 @@ class Cell(object):
             amplitude+=[amp]
             snr = np.double((maxint-prebasal)/prestd)
             snrate += [snr]
-            frc = maxint/prebasal
-            fold_change += [frc]
+            
+            if fc:
+                frc = maxint/prebasal
+                fold_change += [frc]
             
             t = df.time.iloc[3] - df.time.iloc[2]
             pretime = np.array([ peaktime -3*t ,peaktime -2*t,peaktime - 1*t,peaktime])
@@ -319,30 +392,54 @@ class Cell(object):
             count_sd +=[count]
             cell_ID += [self.ID]
 
-        
-        self.propaty = pd.DataFrame({ "repeat":repeat_num ,
-                                      "Voltage":Voltage,
-                                      "pre_basal":pre_basal ,
-                                      "pre_std":pre_std ,
-                                      "post_std":post_std ,
-                                      "max_intensity":max_int ,
-                                      "peak_time":peak_time,
-                                      "amplitude":amplitude,
-                                      "SNrate":snrate ,
-                                      "fold_change":fold_change,
-                                      "pre_timeconst":pre_timeconst,
-                                      "post_timeconst":post_timeconst,
-                                      "preAUC":preAUC,
-                                      "postAUC":postAUC,
-                                      "AUC":AUC,
-                                      "waveform":waveform,
-                                      "pre_waveform":pre_waveform,
-                                      "post_waveform":post_waveform,
-                                      "p_value":p_value ,
-                                      "sig_diff":sig_diff, 
-                                      "count_sd":count_sd,
-                                      "ID":cell_ID })
-        print("ID:"+ str(self.ID))   
+        if fc:
+            propaty = pd.DataFrame({ "repeat":repeat_num ,
+                                          "Voltage":Voltage,
+                                          "pre_basal":pre_basal ,
+                                          "pre_std":pre_std ,
+                                          "post_std":post_std ,
+                                          "max_intensity":max_int ,
+                                          "peak_time":peak_time,
+                                          "amplitude":amplitude,
+                                          "SNrate":snrate ,
+                                          "fold_change":fold_change,
+                                          "pre_timeconst":pre_timeconst,
+                                          "post_timeconst":post_timeconst,
+                                          "preAUC":preAUC,
+                                          "postAUC":postAUC,
+                                          "AUC":AUC,
+                                          "waveform":waveform,
+                                          "pre_waveform":pre_waveform,
+                                          "post_waveform":post_waveform,
+                                          "p_value":p_value ,
+                                          "sig_diff":sig_diff, 
+                                          "count_sd":count_sd,
+                                          "ID":cell_ID })
+        else:
+            propaty = pd.DataFrame({ "repeat":repeat_num ,
+                                          "Voltage":Voltage,
+                                          "pre_basal":pre_basal ,
+                                          "pre_std":pre_std ,
+                                          "post_std":post_std ,
+                                          "max_intensity":max_int ,
+                                          "peak_time":peak_time,
+                                          "amplitude":amplitude,
+                                          "SNrate":snrate ,
+                                          "pre_timeconst":pre_timeconst,
+                                          "post_timeconst":post_timeconst,
+                                          "preAUC":preAUC,
+                                          "postAUC":postAUC,
+                                          "AUC":AUC,
+                                          "waveform":waveform,
+                                          "pre_waveform":pre_waveform,
+                                          "post_waveform":post_waveform,
+                                          "p_value":p_value ,
+                                          "sig_diff":sig_diff, 
+                                          "count_sd":count_sd,
+                                          "ID":cell_ID })
+        print("ID:"+ str(self.ID))
+        return(propaty)
+           
     
     def get_timeconst(self,y):
         x = self.propaty.repeat.values
