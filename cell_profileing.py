@@ -348,7 +348,9 @@ class Cell(object):
             pre_timeconst += [preharf]
 
             posttime = df[df.time >= peaktime].time.values
-            postint = df[df.time >= peaktime].intensity.values
+            posttime = posttime[posttime <= peaktime+500]
+            postint = df[df.time >= peaktime].copy()
+            postint = postint[postint.time <= peaktime+500].intensity.values
             postauc = integrate.simps(postint,posttime)
             postAUC += [np.double(postauc)]            
             AUC += [np.double(preauc+postauc)]
