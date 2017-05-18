@@ -94,7 +94,7 @@ class AllCells(object):
             grid.map(plt.plot,"time","intensity",ms=.7,alpha=0.4)
             grid.fig.suptitle("ID_"+str(id)+"_timeSeries")
             grid.fig.subplots_adjust(top=.95)
-            plt.savefig("timeSeries/ID_"+str(id)+"_timeSeries")
+            plt.savefig("timeSeries/ID_"+str(id)+"_timeSeries",dpi=300)
     def plot_diff_stream(self):
         try:os.mkdir("diff_timeSeries")
         except:print("directly has already existed")
@@ -105,7 +105,7 @@ class AllCells(object):
             grid.map(plt.plot,"time","diff_intensity",ms=.7,alpha=0.4)
             grid.fig.suptitle("ID_"+str(id)+"_diff_timeSeries")
             grid.fig.subplots_adjust(top=.95)
-            plt.savefig("diff_timeSeries/ID_"+str(id)+"_diff_timeSeries")
+            plt.savefig("diff_timeSeries/ID_"+str(id)+"_diff_timeSeries",dpi=300)
     def plot_rate_stream(self):
         try:os.mkdir("rate_timeSeries")
         except:print("directly has already existed")
@@ -116,7 +116,7 @@ class AllCells(object):
             grid.map(plt.plot,"time","rate_intensity",ms=.7,alpha=0.4)
             grid.fig.suptitle("ID_"+str(id)+"_rate_timeSeries")
             grid.fig.subplots_adjust(top=.95)
-            plt.savefig("rate_timeSeries/ID_"+str(id)+"_rate_timeSeries")
+            plt.savefig("rate_timeSeries/ID_"+str(id)+"_rate_timeSeries",dpi=300)
     def plot_norm_stream(self):
         try:os.mkdir("norm_timeSeries")
         except:print("directly has already existed")
@@ -127,7 +127,7 @@ class AllCells(object):
             grid.map(plt.plot,"time","norm_intensity",ms=.7,alpha=0.4)
             grid.fig.suptitle("ID_"+str(id)+"_norm_timeSeries")
             grid.fig.subplots_adjust(top=.95)
-            plt.savefig("norm_timeSeries/ID_"+str(id)+"_norm_timeSeries")
+            plt.savefig("norm_timeSeries/ID_"+str(id)+"_norm_timeSeries",dpi=300)
             
     def plot_does_scatter(self,propaty,feature="amplitude",out=""):
         pal=sns.color_palette("seismic", int(self.repeat_num))
@@ -137,7 +137,7 @@ class AllCells(object):
         #grid.map(sns.factorplot,"Voltage",feature,data=propaty,kind="swarm",alpha=0.7)
         grid.fig.suptitle('Voltage_vs_'+feature)
         grid.fig.subplots_adjust(top=.9)
-        plt.savefig(out+"Does_"+feature)
+        plt.savefig(out+"Does_"+feature,dpi=300)
         grid.fig.clf()
         sns.plt.close()
         gc.collect()
@@ -167,7 +167,7 @@ class AllCells(object):
         grid.fig.suptitle('Voltage_vs_'+feature)
         grid.fig.subplots_adjust(top=.9)
         #grid.fig.tight_layout(w_pad=1)
-        plt.savefig(out+"Does_"+feature)
+        plt.savefig(out+"Does_"+feature,dpi=300)
         grid.fig.clf()
         sns.plt.close()
         gc.collect()
@@ -209,7 +209,7 @@ class AllCells(object):
             grid.map(sns.distplot,feature,rug=True,color="b")
             grid.fig.suptitle("ID_"+str(id)+"_"+feature)
             grid.fig.subplots_adjust(top=.95)
-            plt.savefig(out+"hist_"+feature+"/ID_"+str(id)+"_"+feature)
+            plt.savefig(out+"hist_"+feature+"/ID_"+str(id)+"_"+feature,dpi=300)
             grid.fig.clf()
             sns.plt.close()
             gc.collect()
@@ -241,7 +241,7 @@ class AllCells(object):
             sns.pairplot(data=x,hue="Voltage",palette=pal)
             plt.suptitle('pairplot_ID_'+str(id))
             plt.subplots_adjust(top=.95)
-            plt.savefig("pairplot/ID_"+str(id))
+            plt.savefig("pairplot/ID_"+str(id),dpi=300)
             plt.clf()
             sns.plt.close()
             gc.collect()
@@ -353,9 +353,9 @@ class Cell(object):
             postAUC += [np.double(postauc)]            
             AUC += [np.double(preauc+postauc)]
             
-            pre_waveform += [np.double(preauc/((pretime.max()-pretime.min())*maxint))]
-            post_waveform += [np.double(postauc/((posttime.max()-posttime.min())*maxint))]
-            waveform += [np.double((preauc+postauc)/(maxint*(posttime.max()-pretime.min())))]
+            pre_waveform += [np.double(np.absolute(preauc/((pretime.max()-pretime.min())*maxint)))]
+            post_waveform += [np.double(np.absolute(postauc/((posttime.max()-posttime.min())*maxint)))]
+            waveform += [np.double(np.absolute((preauc+postauc)/(maxint*(posttime.max()-pretime.min()))))]
             x1 = posttime[ (postint - ((postint[0]-postint[-1])/2 + postint[-1])) >= 0].max()
             x2 = x1+t
             y1 = df[df.time == x1].intensity.max()
