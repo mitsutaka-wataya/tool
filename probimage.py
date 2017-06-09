@@ -25,7 +25,7 @@ import multiprocess as mp
 
 class Label_Image(object):
     #dir means experiment data directory
-    def __init__(self,dir=None,roi=None,label_image=None,mask=True,exp_type=None,mask_type=1,split=False,back_ground_subtract=True,plot_back_hist=False,SBtype=1,backf="mean",stim = 420):
+    def __init__(self,dir=None,roi=None,label_image=None,mask=True,exp_type=None,mask_type=1,split=False,back_ground_subtract=True,plot_back_hist=False,SBtype=1,backf="mean",stim = 140):
         """
         exp_type 0: error
         exp_type 1: 0,3,10,20,30,50,100,50,30,20,10,3,0V
