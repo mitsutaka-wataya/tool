@@ -22,7 +22,6 @@ Chi_test]
 
 def cal_JointProbAP_1d(X,m,xran,plothist = False):
     d=Depth(X=X,xran=xran,m=m)
-    d.plot_hist()
     for i in range(m-1):
         d=Depth(pre_depth=d)
         if plothist:
@@ -77,9 +76,9 @@ def Chi_test(N_InBins,alpha):
     #print(chi2)
     #print(threshold)
     if chi2 <= threshold:
-        retH = 0#H0 is accepted
+        retH = 1#H0 is accepted
     else:
-        retH = 1#H0 is rejected
+        retH = 0#H0 is rejected
     return(retH)
     
 class Depth(object):
@@ -110,10 +109,10 @@ class Depth(object):
                     
                     H0 = self.separate(xmin,xmax)
                     #print(H0)
-                    if H0 == 1:
+                    if H0 == 0:
                         self.flag += [1,1]
                         self.part += [(xmin,xmid),(xmid,xmax)]
-                    elif H0 == 0:
+                    elif H0 == 1:
                         self.flag += [0]
                         self.part += [(xmin,xmax)]
                     
@@ -152,7 +151,7 @@ class Depth(object):
     def ret_prob(self):
         bins = self.ret_bins()
         x_idx = [self.range2idx(i) for i in self.part]
-        ret_prob = np.zeros(len(self.x_edges))
+        ret_prob = np.zeros(len(self.x_edges)-1)
         for i in range(len(self.part)):
             NinBin = bin_counter(X=self.X,x_range=(bins[i],bins[i+1]))
             ret_prob[x_idx[i][0]:x_idx[i][1]] = NinBin
