@@ -156,12 +156,12 @@ class Depth(object):
             NinBin = bin_counter(X=self.X,x_range=(bins[i],bins[i+1]))
             ret_prob[x_idx[i][0]:x_idx[i][1]] = NinBin
         bin_len = np.abs(self.x_edges[0]-self.x_edges[1])
-        self.prob = ret_prob/(ret_prob.sum()*bin_len)
+        self.prob = (ret_prob)/(ret_prob.sum())
         return(self.prob)
     
     def plot_hist(self):
         bins=self.ret_bins()
-        plt.hist(x=self.X,bins=bins,histtype="step")
+        plt.hist(x=self.X,bins=bins,histtype="step",normed=True)
         bin_num = len(bins)
         samplesize = self.X.shape[0]
         plt.title("bin_num:"+str(bin_num)+"\nsample size:"+str(samplesize))
@@ -169,7 +169,7 @@ class Depth(object):
 
 
 if __name__ == "__main__":
-    m =20 #bin数=2^(m-1)
+    m =10 #bin数=2^(m-1)
     z1=np.random.normal(loc=-5,scale=1,size=100000)
     z2=np.random.normal(loc=5,scale=3,size=1000)
     z=np.hstack((z1,z2))
