@@ -156,8 +156,9 @@ class Depth(object):
             NinBin = bin_counter(X=self.X,x_range=(bins[i],bins[i+1]))
             ret_prob[x_idx[i][0]:x_idx[i][1]] = NinBin
         bin_len = np.abs(self.x_edges[0]-self.x_edges[1])
-        self.prob = (ret_prob)/(ret_prob.sum())
-        return(self.prob)
+        prob = (ret_prob)/(ret_prob.sum())
+        print(prob)
+        return(prob)
     
     def plot_hist(self):
         bins=self.ret_bins()
