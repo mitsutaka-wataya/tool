@@ -445,7 +445,7 @@ class Cell(object):
     
     def get_timeconst(self,y):
         x = self.propaty.repeat.values
-        y_time = y[0]* 0.36787944117144233
+        y_time = y[0]* np.e
         time_const = x[y>y_time].max()        
         print("real time const:"+str(time_const))
         return (time_const)

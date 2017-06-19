@@ -157,7 +157,6 @@ class Depth(object):
             ret_prob[x_idx[i][0]:x_idx[i][1]] = NinBin
         bin_len = np.abs(self.x_edges[0]-self.x_edges[1])
         prob = (ret_prob)/(ret_prob.sum())
-        print(prob)
         return(prob)
     
     def plot_hist(self):
