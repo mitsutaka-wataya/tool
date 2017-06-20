@@ -170,8 +170,8 @@ class Depth(object):
 
 if __name__ == "__main__":
     m =10 #bin数=2^(m-1)
-    z1=np.random.normal(loc=-5,scale=1,size=100000)
-    z2=np.random.normal(loc=5,scale=3,size=1000)
+    z1=np.random.normal(loc=-4,scale=1,size=5000)
+    z2=np.random.normal(loc=4,scale=3,size=5000)
     z=np.hstack((z1,z2))
     z=z.reshape(-1) #二峰性の混合ガウス分布
     

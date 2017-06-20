@@ -23,6 +23,12 @@ from scipy import stats
 import time
 import multiprocess as mp
 
+def rename_addVol(d,Voltage="30V"):
+    fname = glob.glob(d+"/Stream/*.tif")
+    for i in fname:
+        new = i.split(".")[0]
+        os.rename(i,new+"_"+Voltage+".tif")
+
 class Label_Image(object):
     #dir means experiment data directory
     def __init__(self,dir=None,roi=None,label_image=None,mask=True,exp_type=None,mask_type=1,split=False,back_ground_subtract=True,plot_back_hist=False,SBtype=1,backf="mean",stim = 140):
