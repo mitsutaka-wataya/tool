@@ -36,7 +36,7 @@ class AllCells(object):
         self.norm_repeat_prop.reset_index(inplace=True)        
         
         self.stream = pd.concat([i.tmseries for i in self.cell])
-        self.stream.to_csv("time_series.csv")
+        self.stream.to_csv(fname+"_time_series.csv")
         
         self.repeat_prop.to_csv("feature_raw_"+fname,index=False)
         self.diff_repeat_prop.to_csv("feature_diff_"+fname,index=False)
