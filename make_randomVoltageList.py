@@ -26,7 +26,9 @@ def make_random_list(Voltage,repeat=20):
         result1 += i
     print(result1)
     result2 = [result1[i*len(Voltage) : i*len(Voltage)+len(Voltage)] for i in range(repeat)]
-    return(pd.DataFrame(result1),pd.DataFrame(result2))
+    result2 = pd.DataFrame(result2)
+    
+    return(pd.DataFrame(result1),result2.T)
     
 
 if __name__ == "__main__":
