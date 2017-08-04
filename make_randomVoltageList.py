@@ -8,6 +8,8 @@ make random list csv
 """
 import random 
 import pandas as pd
+import glob
+import os
 
 def make_allrandom_list(Voltage,repeat=20):
     Vol_rep = Voltage*repeat
@@ -31,9 +33,25 @@ def make_random_list(Voltage,repeat=20):
     return(pd.DataFrame(result1),result2.T)
     
 
+def save_list(v_list,cheatsheet,name="rand_vol",d=None):
+    if d == None:
+        v_list.to_csv(name+".csv")
+        cheatsheet.to_excel("sheet_"+name+".xlsx")
+    else :
+        try:os.mkdir(d)
+        except:print("dir has existed")
+        v_list.to_csv(d+"/"+name+".csv")
+        cheatsheet.to_excel(d+"/sheet_"+name+".xlsx")
+
+def make_vol_lists(Voltage,repeat=20,fnum=100,d="Vol_Lists"):
+    for i in range(fnum):
+        num="{0:04d}".format(i)
+        a,b = make_random_list(v,repeat)
+        save_list(a,b,name=num+"rand_vol",d)
+    
 if __name__ == "__main__":
     x=[0,5,10,15,20,25,30,35,40,50]
-    rep_n = 10
+    rep_n = 20
     
     df_sub,sub4exp = make_random_list(x,rep_n)
     df_all,all4exp = make_allrandom_list(x,rep_n)
