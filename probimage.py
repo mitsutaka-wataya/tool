@@ -53,8 +53,8 @@ class Label_Image(object):
         self.area_thresh = 500
         self.stim_time = stim
         if back_ground_subtract:
-            if SBtype == 1:self.out_dir=self.dir + "/output_ind_subback_by_mode"
-            elif SBtype == 2:self.out_dir=self.dir + "/output_stream_subback_by_mode"
+            if SBtype == 1:self.out_dir=self.dir + "/output_ind_subback_by_"+backf
+            elif SBtype == 2:self.out_dir=self.dir + "/output_stream_subback_by_"+backf
         else:self.out_dir=self.dir + "/output"
         
         try:os.mkdir(self.out_dir)
