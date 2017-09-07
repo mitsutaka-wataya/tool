@@ -102,8 +102,8 @@ class COPASIep(object):
         stall = 0
         lap = time.time() - start
         report[0, :] = np.array([bestScore, meanScore, lap, stall])
-        print ('Generation \t Best f(x) \t Mean f(x) \t lap (sec) \t StallGen')
-        print ('%s \t %s \t %s \t %s \t %s' %(1, report[0,0], report[0,1], report[0,2], report[0,3]))
+        print("Generation \t Best f(x) \t Mean f(x) \t lap (sec) \t StallGen")
+        print('%s \t %s \t %s \t %s \t %s', (1, report[0,0], report[0,1], report[0,2], report[0,3]))
         
         for i in range(1, self.numGeneration):
             start = time.time()
@@ -128,7 +128,7 @@ class COPASIep(object):
             meanScore = np.mean(scoreParents)
             lap = time.time() - start
             report[i, :] = np.array([bestScore, meanScore, lap, stall])
-            print( '%s \t %s \t %s \t %s \t %d' %(i+1, report[i,0], report[i,1], report[i,2], report[i,3]))
+            print ('%s \t %s \t %s \t %s \t %d' ,(i+1, report[i,0], report[i,1], report[i,2], report[i,3]))
         return bestIndv, bestScore, report
    
 
@@ -155,7 +155,7 @@ class GA(object):
         toolbox.register("mutate", tools.mutPolynomialBounded, indpb=1, eta=0, low=self.lb, up=self.ub)
         toolbox.register("select", tools.selTournament, tournsize=self.numParents/20)
         tools.mutGaussian()
-        print "Start evolution"
+        print("Start evolution")
         start = time.time()
         population = toolbox.population(n=self.numParents)
         fitnesses = list(map(toolbox.evaluate, population))
@@ -169,9 +169,9 @@ class GA(object):
         std = np.std(fits)
         lap = time.time() - start
         stall=0
-        print("  Evaluated %i individuals" % len(population))
-        print ('Generation \t evaluate \t Best f(x) \t Mean f(x) \t std \t\t lap (sec) \t StallGen')
-        print ('%d \t\t %d \t\t %10f \t %10f \t %10f \t %10f \t %d' %(0, len(population), lastScore, meanScore, std, lap, stall))
+        print("  Evaluated %i individuals" , len(population))
+        print( 'Generation \t evaluate \t Best f(x) \t Mean f(x) \t std \t\t lap (sec) \t StallGen')
+        print( '%d \t\t %d \t\t %10f \t %10f \t %10f \t %10f \t %d' ,(0, len(population), lastScore, meanScore, std, lap, stall))
         report[0, :] = np.array([0, len(population), lastScore, meanScore, std, lap, stall])
         
         # Begin the evolution        
@@ -214,7 +214,7 @@ class GA(object):
                 
                 
             lap = time.time() - start
-            print '%d \t\t %d \t\t %10f \t %10f \t %10f \t %10f \t %d' %(generation+1, len(invalid_ind), bestScore, np.mean(fits), std, lap, stall)
+            print( '%d \t\t %d \t\t %10f \t %10f \t %10f \t %10f \t %d' ,(generation+1, len(invalid_ind), bestScore, np.mean(fits), std, lap, stall))
             report[0, :] = np.array([0, len(invalid_ind), bestScore, meanScore, std, lap, stall])        
         print("-- End of (successful) evolution --")
         best_ind = tools.selBest(population, 1)[0]
