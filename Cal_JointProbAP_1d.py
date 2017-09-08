@@ -29,12 +29,12 @@ def cal_JointProbAP_1d(X,m,xran,plothist = False):
             print("N_defctive_rate:"+str(np.array(d.flag).sum()/len(d.flag)))
         if d.flag.count(1)==0:
             break
-    ret_prob = d.ret_prob()
+    ret_density_function,ret_prob = d.ret_prob()
     ret_edge = d.x_edges
     ret_bins = d.ret_bins()
     N_total = d.X.shape[0]
     N_defctive_rate = np.array(d.flag).sum()/len(d.flag)
-    return(ret_prob,ret_edge,ret_bins,N_total,N_defctive_rate)
+    return(ret_prob,ret_density_function,ret_edge,ret_bins,N_total,N_defctive_rate)
 
 def area_sep(X,x_range,n_sep):
     
@@ -152,13 +152,17 @@ class Depth(object):
     def ret_prob(self):
         bins = self.ret_bins()
         x_idx = [self.range2idx(i) for i in self.part]
-        ret_prob = np.zeros(len(self.x_edges)-1)
+        density = np.zeros(len(self.x_edges)-1)
+        prob = []
         for i in range(len(self.part)):
             NinBin = bin_counter(X=self.X,x_range=(bins[i],bins[i+1]))
-            ret_prob[x_idx[i][0]:x_idx[i][1]] = NinBin
-        bin_len = np.abs(self.x_edges[0]-self.x_edges[1])
-        prob = (ret_prob)/(ret_prob.sum())
-        return(prob)
+            bin_len = bins[i+1]-bins[i]
+            density[x_idx[i][0]:x_idx[i][1]] = NinBin/(bin_len*len(self.X))
+            prob += [NinBin/len(self.X)]
+        prob = np.array(prob)
+        prob = prob/(np.sum(prob))
+        #density = density/np.sum(density*(bins[1:]-bins[:-1]))
+        return(density,prob)
     
     def plot_hist(self):
         bins=self.ret_bins()
@@ -170,14 +174,14 @@ class Depth(object):
 
 
 if __name__ == "__main__":
-    m =10 #bin数=2^(m-1)
+    m =8 #bin数=2^(m-1)
     z1=np.random.normal(loc=-4,scale=1,size=5000)
     z2=np.random.normal(loc=4,scale=3,size=5000)
     z=np.hstack((z1,z2))
     z=z.reshape(-1) #二峰性の混合ガウス分布
     
     z_ran = (z.min(),z.max()) #サンプルの最大、最小のタプル
-    prob,x_edge,bins,N_total,N_defective_rate = cal_JointProbAP_1d(z,m,z_ran,plothist=True)
+    prob,density,x_edge,bins,N_total,N_defective_rate = cal_JointProbAP_1d(z,m,z_ran,plothist=True)
     """
     返り値
     x_edge　ビン幅の端。2^(m-1)+1 のnumpy arrayが返り値
