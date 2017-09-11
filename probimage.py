@@ -145,9 +145,10 @@ class Label_Image(object):
             return(time.time())
 
     def get_voltage(self,fname):
-        
+        #print(fname)
         pattern1 = r"[0-9]+V"
         result1 = re.search(pattern1,fname)
+        #print(result1)
         pattern2 = r"[0-9]+"
         result2 = re.search(pattern2,result1.group())
         return(int(result2.group()))

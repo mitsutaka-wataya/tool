@@ -47,13 +47,10 @@ def read_feature_csv(fname):
         vol.sort()
         vol = np.unique(vol)
         repeat_num = int((diff[diff.ID==i].repeat.max()+1)/10)
-        
         amp = [diff[(diff.ID==i)&(diff.repeat>=10*r)&(diff.repeat<10*(r+1))].amplitude.values.flatten() for r in range(repeat_num)]
         auc = [diff[(diff.ID==i)&(diff.repeat>=10*r)&(diff.repeat<10*(r+1))].AUC.values.flatten() for r in range(repeat_num)]
-        
         #cell = {"amplitude":amp , "AUC":auc,"Voltage":vol,"repeat":repeat_num}
         cell[i] = Cell_Dose(amp,auc,vol,repeat_num)
-    
     return(cell_num,cell)
     
 def Hill_fit(cell_id,cell,Kd0=30.,n0=3.,nmax=10.,Kdmax_rate=2.):
@@ -67,21 +64,23 @@ def Hill_fit(cell_id,cell,Kd0=30.,n0=3.,nmax=10.,Kdmax_rate=2.):
         popt_amp = []
         popt_auc = []
         error_num = 0
-        sim_x = np.linspace(0,np.max(cell[i].Voltage),500)
+        sim_xt = np.linspace(0,np.max(cell[i].Voltage),500)
         sim_amp = []
         sim_auc = []
         for r in range(repeat):
             try:
                 p_amp,pcov = curve_fit(Hill_fun,xdata=cell[i].Voltage,ydata=cell[i].amplitude[r],p0=p0_amp,bounds=b_amp,method="trf")
-                sim_am = Hill_fun(sim_x,p_amp[0],p_amp[1],p_amp[2])
+                sim_am = Hill_fun(sim_xt,p_amp[0],p_amp[1],p_amp[2])
             except:
                 p_amp = np.array([-1,-1,-1])
+                sim_am = Hill_fun(sim_xt,1,1,1)
                 error_num +=1
             try:
                 p_auc,pcov = curve_fit(Hill_fun,xdata=cell[i].Voltage,ydata=cell[i].AUC[r],p0=p0_auc,bounds=b_auc,method="trf")
-                sim_au = Hill_fun(sim_x,p_auc[0],p_auc[1],p_auc[2])
+                sim_au = Hill_fun(sim_xt,p_auc[0],p_auc[1],p_auc[2])
             except:
                 p_auc = np.array([-1,-1,-1])
+                sim_au = Hill_fun(sim_xt,1,1,1)
                 error_num +=1
             popt_amp+=[p_amp]
             popt_auc+=[p_auc]
@@ -97,9 +96,9 @@ def Hill_fit(cell_id,cell,Kd0=30.,n0=3.,nmax=10.,Kdmax_rate=2.):
         cell[i].n_auc = popt_auc[:,2]
         cell[i].sim_amp = sim_amp
         cell[i].sim_auc = sim_auc
-        cell[i].sim_x = sim_x
+        cell[i].sim_x = sim_xt
         print("finished id:%d , error num was %d" %(i,error_num))
-        return(cell)
+    return(cell)
 
 def save_param(ID,cell,fname,out=None):
     cell_num = ID
@@ -164,7 +163,7 @@ def save_dose(ID,cell,fname,out=None):
 def plot_dose(cell_id,cell):
     for i in cell_id:
         for j in range(cell[i].repeat_num):
-            plt.plot(cell[i].sim_x,cell[i].sim_y[j])
+            plt.plot(cell[i].sim_x,cell[i].sim_amp[j])
             plt.scatter(cell[i].Voltage,cell[i].amplitude[j],s=5)
         plt.title("id %damplitude dose_response" %i)
         plt.show()
@@ -182,5 +181,5 @@ def fit_dose2hill(fname):
     plot_dose(ID,cell)
     plot_param_scatter(ID,cell)
     return(ID,cell)
-    
+
     
