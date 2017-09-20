@@ -31,7 +31,7 @@ def rename_addVol(d,Voltage="30V"):
 
 class Label_Image(object):
     #dir means experiment data directory
-    def __init__(self,dir=None,roi=None,label_image=None,mask=True,exp_type=None,mask_type=1,split=False,back_ground_subtract=True,plot_back_hist=False,SBtype=1,backf="mean",stim = 141):
+    def __init__(self,dir=None,roi=None,label_image=None,mask=True,exp_type=None,mask_type=1,split=False,back_ground_subtract=True,plot_back_hist=False,SBtype=1,backf="mean",stim = 141,frametime=70,areathreshold=5):
         """
         exp_type 0: error
         exp_type 1: 0,3,10,20,30,50,100,50,30,20,10,3,0V
@@ -55,8 +55,8 @@ class Label_Image(object):
         self.dir = dir.replace("\\","/")
         self.expname = self.dir.split("/")[-1]
         self.back_feature = backf
-        self.frame_time = 70
-        self.area_thresh = 500
+        self.frame_time = frametime
+        self.area_thresh = areathreshold
         self.stim_time = stim
         if back_ground_subtract:
             if SBtype == 1:self.out_dir=self.dir + "/output_ind_subback_by_"+backf
