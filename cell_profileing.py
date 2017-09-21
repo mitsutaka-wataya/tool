@@ -35,8 +35,10 @@ class AllCells(object):
         self.norm_repeat_prop = pd.concat(self.norm_repeat_prop)
         self.norm_repeat_prop.reset_index(inplace=True)        
         
+        
+        self.outname = fname.split(".")[0]
         self.stream = pd.concat([i.tmseries for i in self.cell])
-        self.stream.to_csv(fname+"_time_series.csv")
+        self.stream.to_csv("time_series_"+fname,index=False)
         
         self.repeat_prop.to_csv("feature_raw_"+fname,index=False)
         self.diff_repeat_prop.to_csv("feature_diff_"+fname,index=False)
@@ -85,7 +87,8 @@ class AllCells(object):
             print("count_sd:"+str(i.propaty[i.propaty.repeat == repeat_num].count_sd.values))
     
     def plot_stream(self):
-        try:os.mkdir("timeSeries")
+        out = self.outname+"_timeSeries"
+        try:os.mkdir(out)
         except:print("directly has already existed")
         for id in range(self.cell_num):
             pal=sns.color_palette("seismic", self.repeat_num)
@@ -94,9 +97,10 @@ class AllCells(object):
             grid.map(plt.plot,"time","intensity",ms=.7,alpha=0.4)
             grid.fig.suptitle("ID_"+str(id)+"_timeSeries")
             grid.fig.subplots_adjust(top=.95)
-            plt.savefig("timeSeries/ID_"+str(id)+"_timeSeries",dpi=300)
+            plt.savefig(out+"/ID_"+str(id)+"_timeSeries",dpi=300)
     def plot_diff_stream(self):
-        try:os.mkdir("diff_timeSeries")
+        out = self.outname + "_diff_timeSeries"
+        try:os.mkdir(out)
         except:print("directly has already existed")
         for id in range(self.cell_num):
             pal=sns.color_palette("seismic", self.repeat_num)
@@ -105,9 +109,10 @@ class AllCells(object):
             grid.map(plt.plot,"time","diff_intensity",ms=.7,alpha=0.4)
             grid.fig.suptitle("ID_"+str(id)+"_diff_timeSeries")
             grid.fig.subplots_adjust(top=.95)
-            plt.savefig("diff_timeSeries/ID_"+str(id)+"_diff_timeSeries",dpi=300)
+            plt.savefig(out + "/ID_"+str(id)+"_diff_timeSeries",dpi=300)
     def plot_rate_stream(self):
-        try:os.mkdir("rate_timeSeries")
+        out =self.outname + "_rate_timeSeries"
+        try:os.mkdir(out)
         except:print("directly has already existed")
         for id in range(self.cell_num):
             pal=sns.color_palette("seismic", self.repeat_num)
@@ -116,9 +121,10 @@ class AllCells(object):
             grid.map(plt.plot,"time","rate_intensity",ms=.7,alpha=0.4)
             grid.fig.suptitle("ID_"+str(id)+"_rate_timeSeries")
             grid.fig.subplots_adjust(top=.95)
-            plt.savefig("rate_timeSeries/ID_"+str(id)+"_rate_timeSeries",dpi=300)
+            plt.savefig(out+"/ID_"+str(id)+"_rate_timeSeries",dpi=300)
     def plot_norm_stream(self):
-        try:os.mkdir("norm_timeSeries")
+        out = self.outname + "_norm_timeSeries"
+        try:os.mkdir(out)
         except:print("directly has already existed")
         for id in range(self.cell_num):
             pal=sns.color_palette("seismic", self.repeat_num)
@@ -127,7 +133,7 @@ class AllCells(object):
             grid.map(plt.plot,"time","norm_intensity",ms=.7,alpha=0.4)
             grid.fig.suptitle("ID_"+str(id)+"_norm_timeSeries")
             grid.fig.subplots_adjust(top=.95)
-            plt.savefig("norm_timeSeries/ID_"+str(id)+"_norm_timeSeries",dpi=300)
+            plt.savefig(out+"/ID_"+str(id)+"_norm_timeSeries",dpi=300)
             
     def plot_does_scatter(self,propaty,feature="amplitude",out=""):
         pal=sns.color_palette("seismic", int(self.repeat_num))
@@ -141,23 +147,29 @@ class AllCells(object):
         grid.fig.clf()
         sns.plt.close()
         gc.collect()
-    def plot_all_does_scatter(self):
-        try:os.mkdir("DoesResponse_scatter")
-        except:print("directly has already existed")
-        try:os.mkdir("DoesResponse_scatter_diff")
-        except:print("directly has already existed")
-        try:os.mkdir("DoesResponse_scatter_rate")
-        except:print("directly has already existed")
-        try:os.mkdir("DoesResponse_scatter_norm")
-        except:print("directly has already existed")
-        for f in self.feature:
-            self.plot_does_scatter(feature=f,out="DoesResponse_scatter/",propaty=self.repeat_prop)
-        for f in self.feature:
-            self.plot_does_scatter(feature=f,out="DoesResponse_scatter_diff/",propaty=self.diff_repeat_prop)
-        for f in self.feature:
-            self.plot_does_scatter(feature=f,out="DoesResponse_scatter_rate/",propaty=self.rate_repeat_prop)
-        for f in self.feature:
-            self.plot_does_scatter(feature=f,out="DoesResponse_scatter_norm/",propaty=self.norm_repeat_prop)
+    def plot_all_does_scatter(self,raw=False,diff=True,rate=False,norm=False):
+        out = self.outname
+        
+        if raw:     
+            try:os.mkdir(out+"_DoesResponse_scatter")
+            except:print("directly has already existed")
+            for f in self.feature:
+                self.plot_does_scatter(feature=f,out=out+"_DoesResponse_scatter/",propaty=self.repeat_prop)
+        if diff:
+            try:os.mkdir(out+"_DoesResponse_scatter_diff")
+            except:print("directly has already existed")
+            for f in self.feature:
+                self.plot_does_scatter(feature=f,out=out+"_DoesResponse_scatter_diff/",propaty=self.diff_repeat_prop)
+        if rate:    
+            try:os.mkdir(out+"_DoesResponse_scatter_rate")
+            except:print("directly has already existed")
+            for f in self.feature:
+                self.plot_does_scatter(feature=f,out=out+"_DoesResponse_scatter_rate/",propaty=self.rate_repeat_prop)
+        if norm:
+            try:os.mkdir(out+"_DoesResponse_scatter_norm")
+            except:print("directly has already existed")
+            for f in self.feature:
+                self.plot_does_scatter(feature=f,out=out+"_DoesResponse_scatter_norm/",propaty=self.norm_repeat_prop)
 
     def plot_does(self,propaty,feature="amplitude",out=""):
         pal=sns.color_palette("seismic", int(self.repeat_num))
@@ -171,25 +183,29 @@ class AllCells(object):
         grid.fig.clf()
         sns.plt.close()
         gc.collect()
-    def plot_all_does(self):
-        try:os.mkdir("DoesResponse")
-        except:print("directly has already existed")
-        try:os.mkdir("DoesResponse_diff")
-        except:print("directly has already existed")
-        try:os.mkdir("DoesResponse_rate")
-        except:print("directly has already existed")
-        try:os.mkdir("DoesResponse_norm")
-        except:print("directly has already existed")
-        
-        for f in self.feature:
-            self.plot_does(feature=f,out="Doesresponse/",propaty=self.repeat_prop)
-        for f in self.feature:
-            self.plot_does(feature=f,out="Doesresponse_diff/",propaty=self.diff_repeat_prop)
-        for f in self.feature:
-            self.plot_does(feature=f,out="Doesresponse_rate/",propaty=self.rate_repeat_prop)
-        for f in self.feature:
-            self.plot_does(feature=f,out="Doesresponse_norm/",propaty=self.norm_repeat_prop)
-            
+    def plot_all_does(self,raw=False,diff=True,rate=False,norm=False):
+        out = self.outname
+        if raw:
+            try:os.mkdir(out+"_DoesResponse")
+            except:print("directly has already existed")          
+            for f in self.feature:
+                self.plot_does(feature=f,out=out+"_Doesresponse/",propaty=self.repeat_prop)
+        if diff:
+            try:os.mkdir(out+"_DoesResponse_diff")
+            except:print("directly has already existed")
+            for f in self.feature:
+                self.plot_does(feature=f,out=out+"_Doesresponse_diff/",propaty=self.diff_repeat_prop)
+        if rate:
+            try:os.mkdir(out+"_DoesResponse_rate")
+            except:print("directly has already existed")
+            for f in self.feature:
+                self.plot_does(feature=f,out=out+"_Doesresponse_rate/",propaty=self.rate_repeat_prop)
+        if norm:
+            try:os.mkdir(out+"_DoesResponse_norm")
+            except:print("directly has already existed")
+            for f in self.feature:
+                self.plot_does(feature=f,out=out+"_Doesresponse_norm/",propaty=self.norm_repeat_prop)
+                
     def plot_hist(self,propaty,out,feature="amplitude"):
         #pal=sns.color_palette("seismic", int(10))
         try:os.mkdir(out+"hist_"+feature)
@@ -213,23 +229,29 @@ class AllCells(object):
             grid.fig.clf()
             sns.plt.close()
             gc.collect()
-    def plot_all_hist(self):
-        try:os.mkdir("hist")
-        except:print("dirctly is already has existed")
-        try:os.mkdir("hist_diff")
-        except:print("dirctly is already has existed")
-        try:os.mkdir("hist_rate")
-        except:print("dirctly is already has existed")
-        try:os.mkdir("hist_norm")
-        except:print("dirctly is already has existed")
-        for f in self.feature:
-            self.plot_hist(feature=f,out="hist/",propaty=self.repeat_prop)
-        for f in self.feature:
-            self.plot_hist(feature=f,out="hist_diff/",propaty=self.diff_repeat_prop)
-        for f in self.feature:
-            self.plot_hist(feature=f,out="hist_rate/",propaty=self.rate_repeat_prop)
-        for f in self.feature:
-            self.plot_hist(feature=f,out="hist_norm/",propaty=self.norm_repeat_prop)
+    def plot_all_hist(self,raw=False,diff=True,rate=False,norm=False):
+        out = self.outname
+        
+        if raw:
+            try:os.mkdir(out+"_hist")
+            except:print("dirctly is already has existed")
+            for f in self.feature:
+                self.plot_hist(feature=f,out=out+"_hist/",propaty=self.repeat_prop)
+        if diff:   
+            try:os.mkdir(out+"_hist_diff")
+            except:print("dirctly is already has existed")
+            for f in self.feature:
+                self.plot_hist(feature=f,out=out+"_hist_diff/",propaty=self.diff_repeat_prop)
+        if rate:    
+            try:os.mkdir(out+"_hist_rate")
+            except:print("dirctly is already has existed")
+            for f in self.feature:
+                self.plot_hist(feature=f,out=out+"_hist_rate/",propaty=self.rate_repeat_prop)    
+        if norm:
+            try:os.mkdir(out+"_hist_norm")
+            except:print("dirctly is already has existed")
+            for f in self.feature:
+                self.plot_hist(feature=f,out=out+"_hist_norm/",propaty=self.norm_repeat_prop)
             
     def plot_pairplot(self):
         try:os.mkdir("pairplot")
@@ -309,10 +331,10 @@ class Cell(object):
         post_waveform = []
         waveform = []
         fold_change = [] 
-        
+        error_num =0
         count=0
         for df in ts_list:
-            df = df.sort("time")
+            df = df.sort_index()
             repeat_num += [df["repeat"].iloc[0]]
             Voltage += [int(df["Voltage"].iloc[0])]            
             prebasal = df[df.stim==False].intensity.mean()
@@ -320,7 +342,7 @@ class Cell(object):
             prestd = df[df.stim==False].intensity.std()
             pre_std += [prestd]
             post_std += [df[df.stim==True].intensity.std()]            
-            maxint = df[df.stim==True].intensity.max()
+            maxint = df[(df.stim==True)&(df.time!=df.time.max())&(df.time!=df.time.min())].intensity.max()
             max_int += [maxint]
             peaktime = df[df.intensity == maxint]
             peaktime = peaktime[peaktime.stim == True].time.min()
@@ -336,36 +358,44 @@ class Cell(object):
                 fold_change += [frc]
             
             t = df.time.iloc[3] - df.time.iloc[2]
-            pretime = np.array([ peaktime -3*t ,peaktime -2*t,peaktime - 1*t,peaktime])
-            preint = np.array([df[df.time==pretime[0]].intensity.max(),df[df.time==pretime[1]].intensity.max(),df[df.time==pretime[2]].intensity.max(),maxint])
-            preauc = integrate.simps(preint,pretime)
+            preint = df[(df.time<= peaktime)].intensity.values.flatten()
+            pretime = df[(df.time<= peaktime)].time.values.flatten()
+            preauc = preauc = integrate.simps(preint,pretime)
             preAUC += [np.double(preauc)]
-            x1 = pretime[(preint - ((preint[-1]-preint[0])/2 + preint[0]))  <= 0].max()
-            x2 = x1+t
-            y1 = df[df.time == x1].intensity.max()
-            y2 = df[df.time == x2].intensity.max()
-            preharf = (x1 + (x2-x1)*((0.5*maxint - y1)/(y2-y1)))
-            pre_timeconst += [preharf]
+            peakhaｌf = amp/2 + prebasal 
+            if [] == list(np.where(preint[preint==peakhalf])):
+                prehalf = pretime[np.where(preint[preint==peakhalf])]
+            else:
+                try:t1 = pretime[np.where((preint<peakhalf)&(preint!=preint[-1]))].max()
+                except:t1 = np.int(peaktime-t)
+                t2 = np.int(t1 + t)
+                i1 = preint[np.where(pretime==t1)].max()
+                i2 = preint[np.where(pretime==t2)].max()
+                prehalf = t1 + t*np.abs((peakhalf-i1)/(i2-i1))
+            pre_timeconst += [prehalf]
 
-            posttime = df[df.time >= peaktime].time.values
-            posttime = posttime[posttime <= peaktime+500]
-            postint = df[df.time >= peaktime].copy()
-            postint = postint[postint.time <= peaktime+500].intensity.values
-            postauc = integrate.simps(postint,posttime)
-            postAUC += [np.double(postauc)]            
-            AUC += [np.double(preauc+postauc)]
+            postint = df[(df.time>= peaktime)].intensity.values.flatten()
+            posttime = df[(df.time>= peaktime)].time.values.flatten()
+            postauc = postauc = integrate.simps(postint,posttime)
+            postAUC += [np.double(preauc)]
+
+            if [] == list(np.where(postint[postint==peakhalf])):
+                posthalf = posttime[np.where(postint[postint==peakhalf])]
+            else:
+                try:t2 = posttime[np.where((postint<peakhalf)&(postint!=postint[0]))].min()
+                except:t2 = int(peaktime + t)
+                t1 = np.int(t2-t)
+                i1 = postint[np.where(posttime==t1)].max()
+                i2 = postint[np.where(posttime==t2)].max()
+                posthalf = t1 + t*np.abs((peakhalf-i1)/(i2-i1))
+            post_timeconst += [posthalf]
             
+            AUC += [preauc+postauc]
             pre_waveform += [np.double(np.absolute(preauc/((pretime.max()-pretime.min())*maxint)))]
             post_waveform += [np.double(np.absolute(postauc/((posttime.max()-posttime.min())*maxint)))]
             waveform += [np.double(np.absolute((preauc+postauc)/(maxint*(posttime.max()-pretime.min()))))]
             x1 = posttime[ (postint - ((postint[0]-postint[-1])/2 + postint[-1])) >= 0].max()
             x2 = x1+t
-            y1 = df[df.time == x1].intensity.max()
-            y2 = df[df.time == x2].intensity.max()
-            postharf = (x1 + (x2-x1)*((y1 - 0.5*maxint)/(y1-y2)))
-            post_timeconst += [postharf]
-            
-            
             
             p = stats.mannwhitneyu(df[df.stim ==True].intensity,df[df.stim ==False].intensity,alternative="greater")      
             p = p.pvalue

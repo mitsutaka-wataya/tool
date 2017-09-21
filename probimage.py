@@ -10,6 +10,7 @@ from skimage.measure import regionprops
 from skimage import measure
 from skimage import io
 from skimage.io import ImageCollection
+from matplotlib import colors
 import glob
 import os
 import pandas as pd
@@ -21,7 +22,7 @@ import gc
 import mahotas.labeled as mal
 from scipy import stats
 import time
-import multiprocess as mp
+
 
 def rename_addVol(d,Voltage="30V"):
     fname = glob.glob(d+"/Stream/*.tif")
@@ -31,7 +32,7 @@ def rename_addVol(d,Voltage="30V"):
 
 class Label_Image(object):
     #dir means experiment data directory
-    def __init__(self,dir=None,roi=None,label_image=None,mask=True,exp_type=None,mask_type=1,split=False,back_ground_subtract=True,plot_back_hist=False,SBtype=1,backf="mean",stim = 141,frametime=70,areathreshold=5):
+    def __init__(self,dir=None,roi=None,label_image=None,mask=True,exp_type=None,mask_type=1,split=False,back_ground_subtract=True,plot_back_hist=False,SBtype=1,backf="mean",stim = 400,frametime=70,areathreshold=5):
         """
         exp_type 0: error
         exp_type 1: 0,3,10,20,30,50,100,50,30,20,10,3,0V
@@ -75,7 +76,7 @@ class Label_Image(object):
             stream_dir = glob.glob(dir+"/split/*V*")
             stream_dir = [i.replace("\\","/") for i in stream_dir]
         else:
-            stream_fname = glob.glob(dir+"/Stream/*")
+            stream_fname = glob.glob(dir+"/Stream/*.tif")
             stream_fname = [i.replace("\\","/") for i in stream_fname]
             
         streamname = [i.split("/")[-1] for i in stream_fname]
@@ -112,6 +113,14 @@ class Label_Image(object):
             self.back= pd.DataFrame(self.back)
             self.back.columns = ["mean","minimum","median","mode"]
             self.back.to_csv(self.out_dir+"/background.csv")
+            
+            
+            bound = np.linspace(0,self.label_num,self.label_num+1)
+            norm = colors.BoundaryNorm(boundaries=bound,ncolors=256)
+            plt.imshow(self.labelimage,cmap ="gist_ncar" ,norm=norm)
+            cbar=plt.colorbar()
+            cbar.set_label(label="cell ID")
+            plt.savefig(self.out_dir+"/labeled_image.png")
             
             end_time=self.get_time()            
             print("intensity was mesured successfuly!!")
