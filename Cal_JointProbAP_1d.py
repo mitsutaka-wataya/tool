@@ -19,7 +19,32 @@ area_sep
 bin_counter
 Chi_test]
 """
-
+class RetObj(object):
+    def __init__(self,density_function,prob,x_edge,bins,N_total,N_defective,m):
+        self.density_function = density_function
+        self.density_function_edge = x_edge
+        self.probability = prob
+        self.probability_edge = bins
+        self.N_total = N_total
+        self.N_defective = N_defective
+        self.m = m
+        
+    def calc_Likelihood(self,data):
+        if self.density_function[self.density_function==0].shape[0] != 0:
+            print("be care!! there are some caliculation like log(0)!!")
+        hist = np.histogram(data,self.density_function_edge)[0]
+        #print(hist)
+        idx=np.where((hist!=0.)&(self.density_function!=0.))
+        hist = hist[idx]
+        density_fun = self.density_function[idx]
+        #print(density_fun)
+        ret=[]
+        for n,f in zip(hist,density_fun):
+            ret+=[f]*n
+        #logL = (np.log(density_fun)*hist)
+        return(np.array(ret))
+        
+        
 def cal_JointProbAP_1d(X,m,xran,plothist = False):
     d=Depth(X=X,xran=xran,m=m)
     for i in range(m-1):
@@ -27,14 +52,17 @@ def cal_JointProbAP_1d(X,m,xran,plothist = False):
         if plothist:
             d.plot_hist()
             print("N_defctive_rate:"+str(np.array(d.flag).sum()/len(d.flag)))
-        if d.flag.count(1)==0:
-            break
+        #if d.flag.count(1)==0:
+        #    break
     ret_density_function,ret_prob = d.ret_prob()
     ret_edge = d.x_edges
     ret_bins = d.ret_bins()
     N_total = d.X.shape[0]
     N_defctive_rate = np.array(d.flag).sum()/len(d.flag)
-    return(ret_prob,ret_density_function,ret_edge,ret_bins,N_total,N_defctive_rate)
+    
+    ret = RetObj(ret_density_function,ret_prob,ret_edge,ret_bins,N_total,N_defctive_rate,m)
+    
+    return(ret)
 
 def area_sep(X,x_range,n_sep):
     
