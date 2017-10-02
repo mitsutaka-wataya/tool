@@ -46,7 +46,7 @@ def save_list(v_list,cheatsheet,name="rand_vol",d=None):
 def make_vol_lists(Voltage,repeat=20,fnum=100,d="Vol_Lists"):
     for i in range(fnum):
         num="{0:04d}".format(i)
-        a,b = make_random_list(v,repeat)
+        a,b = make_random_list(Voltage,repeat)
         save_list(a,b,name=num+"rand_vol",d=d)
     
 if __name__ == "__main__":
