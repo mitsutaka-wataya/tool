@@ -335,7 +335,6 @@ class Cell(object):
         count=0
         for df in ts_list:
             df = df.sort_index()
-            print(df)
             repeat_num += [df["repeat"].iloc[0]]
             Voltage += [int(df["Voltage"].iloc[0])]            
             prebasal = df[df.stim==False].intensity.mean()
