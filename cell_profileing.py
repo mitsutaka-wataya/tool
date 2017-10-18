@@ -270,7 +270,7 @@ class AllCells(object):
             
 class Cell(object):
     def __init__(self,cell_df,repeat_num):
-        self.stream = [cell_df[cell_df.repeat == i] for i in range(repeat_num)]
+        self.stream = [cell_df[cell_df.repeat == i].copy() for i in range(repeat_num)]
         self.tmseries = cell_df.copy()
         self.ID = int(self.stream[0].ID.iloc[0])     
         self.propaty = self.make_df(self.stream,fc=True)
@@ -335,6 +335,7 @@ class Cell(object):
         count=0
         for df in ts_list:
             df = df.sort_index()
+            print(df)
             repeat_num += [df["repeat"].iloc[0]]
             Voltage += [int(df["Voltage"].iloc[0])]            
             prebasal = df[df.stim==False].intensity.mean()
